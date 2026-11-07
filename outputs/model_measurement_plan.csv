@@ -1,0 +1,4 @@
+action,metric,window_days,mde,note
+Any floor-wide action,daily property theo vs July counterfactual,30,0.04679043110345549,"resid SD 4.3%, lag-1 ρ 0.62"
+A-WAYFINDING (Back Forty),B40 vs control-zone log coin-in/hr gap,30,0.03569760507419129,break-even lift 1.9% of B40 theo
+A-PREVENTIVE (Ridgeline),Ridgeline fault rate vs Jan–Jun rate (Poisson),30,-0.24780780082971798,break-even reduction 32%

@@ -7,7 +7,10 @@ Ground rules (GUIDE.md §5, §7):
 """
 from __future__ import annotations
 
+import os
 import sys
+
+os.environ.setdefault("LOKY_MAX_CPU_COUNT", "8")  # silences joblib core-count probe on Windows
 from pathlib import Path
 
 import numpy as np
