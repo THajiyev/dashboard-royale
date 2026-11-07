@@ -177,3 +177,36 @@ Wayfinding can pay for itself below the detectable effect, so it needs the zone-
 - **Theme effects** in the GLM are cross-sectional. High-Limit is excluded from the location verdict because its game exists only there.
 - **Fault-rate inference.** Manufacturer and age are observational. The replay is mechanistic but assumes one tech per job and no travel time.
 - **The data is synthetic.** The queue replay matching exactly suggests the simulator and the data generator share the same queue logic; real data would be noisier.
+
+## Iteration 2 — wider model search (no new winner)
+
+Full write-up: `analysis/experiments/iter2/README.md`. We tested 30 models against EL with the same harness:
+
+- **Classical TS:** AutoETS, AutoARIMA, AutoTheta and MSTL on the event-adjusted series.
+- **Prophet:** flat and linear growth.
+- **Boosting:** CatBoost and XGBoost, fitted directly and on EL's residuals.
+- **EL refinements:** holiday term, level shifts for the closure and the 308 machines, recency weighting, recent-level rescaling, median base, payday term.
+- **Bottom-up:** by zone, and coin-in × theo-hold.
+- **Combinations** of the above.
+
+**Holdout submissions (3 of 3, chosen in advance by CV):**
+
+| Submission | Holdout theo MAE |
+|---|---:|
+| EL + recent level + payday | $5,497 |
+| 3-way combo (EL-level28, AutoTheta, Prophet-linear) | $5,810 |
+| AutoTheta | $5,704 |
+| *EL (reference)* | *$4,290* |
+
+All three lost. Each tracks the level that rose through Jan–Apr, and that rise reversed in May–Jun. Across the 30 models, **CV rank and holdout rank are negatively correlated (Spearman −0.42, p = 0.02)**, so Jan–Apr CV can't choose between level assumptions here.
+
+Scoring every model afterwards (a diagnostic only), a few beat EL by 1–3%:
+
+| Model | vs EL | DM p | Caveat |
+|---|---:|---:|---|
+| EL × CatBoost residual | +3.2% | 0.19 | lost CV |
+| EL coin-in × recent theo-hold | +2.9% | 0.02 | in effect ×0.997 on theo |
+| EL, median base | +1.7% | — | |
+| EL + holiday term | +0.9% | — | |
+
+None is adopted without a fresh test window. **EL remains the current best.**
