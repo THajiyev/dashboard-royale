@@ -210,3 +210,20 @@ Scoring every model afterwards (a diagnostic only), a few beat EL by 1–3%:
 | EL + holiday term | +0.9% | — | |
 
 None is adopted without a fresh test window. **EL remains the current best.**
+
+## Iteration 3 — weekly refresh and zone-structural model (new recommendation)
+
+Full write-up: `analysis/experiments/iter3/README.md`.
+
+**Recommendation: refresh the forecast weekly, anchor the level to the last 28 non-event days, and count event evidence per event (EL2).** The 28-day window, the anchor weight and the shrinkage were all chosen on Jan–Apr refresh CV.
+
+| Theo, May–Jun | MAE, all 61 days | MAE, ordinary days (excl. Locals week) | Bias ex-Locals | Bias, last 2 weeks |
+|---|---:|---:|---:|---:|
+| Fixed EL (previous best) | **$4,290** | $4,249 | +$3,315 | +$5,786 |
+| Weekly-refresh EL2 + anchor | $4,849 | **$3,677 (−13%)** | **+$2,324** | **+$2,296** |
+
+**Ordinary days.** The refreshed model is more accurate and follows the April–June decline within weeks.
+
+**Over all 61 days it loses**, because of the Locals Appreciation Week (Jun 9–15). The promotion was announced May 26, so only the refreshed model knows about it. It gets the +18% lift learned from the Winter Slot Tournament, but its actual lift was about +3–8%. No Jan–Apr evidence predicts this; a weekend-vs-weekday explanation was tested on the training data and refuted. Show novel event formats as a range, not as one lift.
+
+**Zone-structural model (ZS).** It models theo per machine per zone, so the 8 new Pit machines count as capacity, and it excludes the closure window. That gives the correct Apr 30 level, 2% above EL, and it does worse on the holdout ($5,950). EL's fixed-horizon lead is partly offsetting errors: the closure dragged its average down just before demand declined.

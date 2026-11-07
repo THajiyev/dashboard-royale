@@ -1,0 +1,2 @@
+{"time": "2026-11-07T21:40:24", "models": ["fixed:EL (current best)", "fixed:ZS", "fixed:ZS + damped trend (phi .98)", "refresh:B2", "refresh:EL", "refresh:EL + anchor 100% (28d)", "refresh:ZS", "refresh:ZS + anchor 100% (28d)"]}
+{"time": "2026-11-07T21:41:51", "models": ["fixed:EL2 k_ev=0.5", "refresh:EL2 k_ev=0.5 + anchor 100% (28d)", "refresh:EL2 k_ev=0.5 + anchor 50% (28d)", "refresh:EL2 k_ev=0.5 + anchor 0% (28d)"]}
