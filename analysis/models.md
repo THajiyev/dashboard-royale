@@ -65,6 +65,40 @@ Coin-in tells the same story (`model_comparison.csv`).
 - Intervals: split-conformal 90% bands cover 87–98% of holdout days, so they are honest or slightly wide.
 - **Decision use:** `model_july_theo_counterfactual.csv` is the "no action" yardstick for July. It uses OLS-log refit on Jan–Jun: the best model on the holdout after B2, with a holiday term for Jul 4. It predicts $3.78M of theo over 30 days, or **$3.63M anchored to June's level (×0.959)**. Use the anchored version.
 
+## Iteration 1 — event-type lift (current best forecast)
+
+`forecast.event_type_lift()`, found by the multi-agent search in `analysis/experiments/`.
+
+**How it works.** It keeps B2's non-event weekday base, but replaces the single pooled event lift with a hierarchy:
+
+| Level | Lift (Jan–Apr) |
+|---|---|
+| Pooled | 1.10 |
+| Business events (conventions) | 1.03 |
+| Leisure events: sports viewing | 1.20 |
+| Leisure events: property promotion | 1.17 |
+
+The classes were fixed in advance by visitor purpose. Each level is shrunk toward the one above with a pseudo-count of 3 days. An event type never seen in training gets its class lift; on the holdout that is EDC, a festival, which gets the leisure lift of ≈ 1.17.
+
+**Results.** The skill column is the improvement over B2.
+
+| Target | Holdout MAE | B2 | Skill vs B2 | DM p vs B2 | 7-fold CV MAE (B2) | CV folds won |
+|---|---:|---:|---:|---:|---:|---:|
+| Theo | **$4,290** | $4,460 | +3.8% | 0.23 | $4,027 ($5,443) | 6 of 7 |
+| Coin-in | **$44,912** | $46,671 | +3.8% | 0.23 | $44,888 ($59,613) | 6 of 7 |
+| House win | $9,254 | $8,865 | −4.4% | 0.87 | $8,604 ($9,642) | 6 of 7 |
+
+**How to read it:**
+- **Leakage.** None found. The model uses training actuals and events announced by each origin only, and the coordinator audited and reproduced it.
+- **What the win rests on.** The 3 EDC days (May 16–18) are the only holdout days where it differs from B2. It beats B2 for any EDC lift between ≈ 1.11 and 1.19. That is why the gain is not statistically significant on 61 days.
+- **Independent support.** Jan–Apr CV supports the business/leisure split without touching May–Jun.
+- **Disclosed contamination.** The search brief mentioned B2's EDC under-forecast, which is holdout knowledge, so the search was pointed at event days.
+- **House win** is worse because luck dominates it; the forecast target is theo.
+- **Holdout budget.** This was 1 of 6 allowed submissions (`analysis/experiments/leaderboard_ds-alpha.jsonl`). ds-beta's robust, recency and median-loss variants lost to B2 in CV and were not submitted (`analysis/experiments/ds_beta/`).
+- **Still open.** The June over-forecast (+$2.5K/day) remains. Nothing observable by Apr 30 (trips, enrollments, entrance counts, carded share) signals it.
+
+**Decision use.** Leisure events lift play ≈ 6× more than conventions (+17–20% vs +3%). That is the evidence base for valuing A-PROMO (property promotion weekend, ≈ 1.17 lift in training). It also argues against timing actions around conventions.
+
 ## Phase 3 — Location-adjusted machine model (`machine_effects.py`)
 
 Target: coin-in per available hour, with log link and an offset of log(hours).

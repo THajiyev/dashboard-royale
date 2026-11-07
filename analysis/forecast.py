@@ -130,6 +130,53 @@ def m_bayes_ridge(tr, te, y, return_std=False):
     return (np.exp(mu), sd) if return_std else np.exp(mu + sd ** 2 / 2)
 
 
+# ----------------------------------------------------------------------------- iteration models
+# Found by the multi-agent search (analysis/experiments/), approved for use. Kept out of MODELS so the
+# frozen Phase 2 protocol (CV choice, ensemble) is unchanged.
+EVENT_CLASS = {"convention": "business", "sports_viewing": "leisure", "festival": "leisure",
+               "property_promotion": "leisure"}  # a-priori: why the visitor is in town
+
+
+def event_type_lift(k_class: float = 3.0, k_type: float = 3.0):
+    """Iteration 1 (ds-alpha): B2 base × hierarchical event lift, pooled → class → event_type.
+
+    Each training event day gives ratio = actual / non-event weekday mean. Class means (business vs
+    leisure) are shrunk toward the pooled mean, and type means toward their class, with pseudo-count k
+    days. A type never seen in training (e.g. the EDC festival) gets its class lift. Only events with
+    announced_date ≤ the training origin are used, at every origin.
+    """
+    ev = load("4_context/events.parquet")
+    for c in ["start_date", "end_date", "announced_date"]:
+        ev[c] = pd.to_datetime(ev[c])
+
+    def labels(dates, origin):
+        known = ev[ev.announced_date <= origin]
+        d = pd.to_datetime(pd.Series(dates)).to_numpy()
+        typ = np.full(len(d), None, dtype=object)
+        for s, e, t in zip(known.start_date, known.end_date, known.event_type):
+            typ[(d >= s.to_datetime64()) & (d <= e.to_datetime64())] = t
+        return typ
+
+    def f(tr, te, y):
+        origin = tr.gaming_date.max()
+        tt, ft = labels(tr.gaming_date, origin), labels(te.gaming_date, origin)
+        is_ev = pd.notna(tt)
+        base = tr[~is_ev].groupby("dow")[y].mean()
+        r = pd.Series(tr[y].to_numpy()[is_ev] / tr.dow.map(base).to_numpy()[is_ev])
+        types = pd.Series(tt[is_ev])
+        classes = types.map(EVENT_CLASS).fillna("leisure")
+        pooled = r.mean() if len(r) else 1.0
+        cl = {c: (len(x) * x.mean() + k_class * pooled) / (len(x) + k_class) for c, x in r.groupby(classes.to_numpy())}
+        ty = {t: (len(x) * x.mean() + k_type * cl[EVENT_CLASS.get(t, "leisure")]) / (len(x) + k_type)
+              for t, x in r.groupby(types.to_numpy())}
+        lift = np.array([1.0 if t is None else ty.get(t, cl.get(EVENT_CLASS.get(t, "leisure"), pooled)) for t in ft])
+        return te.dow.map(base).to_numpy() * lift
+    return f
+
+
+ITERATIONS = {"Iteration 1: event-type lift (B2 base, business vs leisure)": event_type_lift(3, 3)}
+
+
 MODELS = {
     "B0 constant mean": lambda tr, te, y: np.full(len(te), tr[y].mean()),
     "B1 weekday mean": m_b1,

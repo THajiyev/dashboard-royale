@@ -28,6 +28,25 @@ pd.set_option("display.max_columns", 25)
 JULY_MODEL = "OLS log (weekday+event+holiday)"  # best non-baseline on the holdout; has a holiday term for Jul 4
 
 
+def iteration_scores() -> pd.DataFrame:
+    """Approved iteration models vs B1/B2 on the holdout, with the harness's 7-origin CV and DM test."""
+    sys.path.insert(0, str(OUT.parent / "analysis" / "experiments"))
+    import harness
+    from common import score, split_by_date
+    tr, te = split_by_date(forecast.daily_frame())
+    rows = []
+    for name, f in forecast.ITERATIONS.items():
+        for tgt in ["theo_usd", "coin_in_usd", "house_win_usd"]:
+            p, b1, b2 = f(tr, te, tgt), forecast.m_b1(tr, te, tgt), forecast.m_b2(tr, te, tgt)
+            y = te[tgt].to_numpy()
+            s = score(y, p, ref_mae=np.mean(np.abs(b1 - y)))
+            c = harness.cv(f, tgt)
+            rows.append({"target": tgt, "model": name, "stack": "iteration", "phase": "iteration 1", **s,
+                         "cv7_mae": c["cv_mae"], "cv7_mae_b2": c["cv_mae_b2"], "cv7_folds_won_vs_b2": c["folds_won"],
+                         "skill_vs_B2": 1 - s["MAE"] / np.mean(np.abs(b2 - y)), "dm_p_vs_B2": harness.dm_test(p - y, b2 - y)})
+    return pd.DataFrame(rows)
+
+
 def classify(b10: pd.DataFrame, L: pd.DataFrame, fx: pd.DataFrame, f: pd.DataFrame, v: pd.DataFrame) -> pd.DataFrame:
     """Luck / Location / Leak / Downtime / Game / Exposure verdict for each of the GM's bottom 10."""
     L = L.set_index("machine_id")
@@ -154,6 +173,7 @@ def main():
     p0 = pd.read_csv(OUT / "phase0_baseline_scores.csv") if (OUT / "phase0_baseline_scores.csv").exists() else None
     if p0 is not None:
         mc = pd.concat([mc, p0[p0.target.str.startswith("Machine-day")].assign(phase="3 machine", stack="baseline")], ignore_index=True)
+    mc = pd.concat([mc, iteration_scores()], ignore_index=True)
     mc.to_csv(OUT / "model_comparison.csv", index=False)
 
     # ---------------- decisions
