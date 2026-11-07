@@ -227,3 +227,15 @@ Full write-up: `analysis/experiments/iter3/README.md`.
 **Over all 61 days it loses**, because of the Locals Appreciation Week (Jun 9–15). The promotion was announced May 26, so only the refreshed model knows about it. It gets the +18% lift learned from the Winter Slot Tournament, but its actual lift was about +3–8%. No Jan–Apr evidence predicts this; a weekend-vs-weekday explanation was tested on the training data and refuted. Show novel event formats as a range, not as one lift.
 
 **Zone-structural model (ZS).** It models theo per machine per zone, so the 8 new Pit machines count as capacity, and it excludes the closure window. That gives the correct Apr 30 level, 2% above EL, and it does worse on the holdout ($5,950). EL's fixed-horizon lead is partly offsetting errors: the closure dragged its average down just before demand declined.
+
+## Change-impact model (`analysis/impact.py`, write-up in `analysis/impact.md`)
+
+This model scores any change for direct effect, spillover and **net theo $/day**, each with a 90% interval and a Positive / Negative / Inconclusive verdict. The intervals come from placebos and were validated on 300 fake changes, with injected effects, before use. Headline results:
+
+| Change | Finding |
+|---|---|
+| Walkway closure | Back Forty −26%, other zones +5%. Whole floor +1.6% (−0.2% to +3.4%): **no net loss.** The ≈ $136K in Phase 4a is Back Forty's loss, not the property's. |
+| Like-for-like replacement (bottom-10 slot L-38-5) | +$4/day (−$17 to +$23). Can't pay back a $2,500 + $55/day lease. |
+| Move M-1152, Back Forty → Entrance | +101% coin-in; **net +$342/day** after bank-mate spillover. Pays back a $1,800 move in about a week. |
+| 8 new Pit machines | Net +$5.3K/day; cannibalization −0.3% (−2.5% to +1.9%) |
+| Outages | Bank-mates recapture −2% (−15% to +12%) of a down machine's play, so outage play is lost |
