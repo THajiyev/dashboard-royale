@@ -441,3 +441,82 @@ main section[aria-labelledby] { scroll-margin-top: 112px; }
 .says b { color: var(--ink); font-weight: 500; }
 .matrix-wrap { overflow-x: auto; }
 .chart .cell { shape-rendering: crispEdges; }
+
+/* ---------------------------------------------------------------- six sections + Methods menu */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.nav { overflow: visible; }
+.nav-more { position: relative; display: flex; }
+.nav-more-btn { display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent;
+  color: var(--ink-2); font: inherit; cursor: pointer; white-space: nowrap; }
+.nav-more-btn:hover, .nav-more.open .nav-more-btn { background: var(--raised); color: var(--ink); }
+.nav-more-btn[aria-current="page"] { color: var(--ink); font-weight: 500; box-shadow: inset 0 -2px 0 var(--accent); border-radius: 8px 8px 0 0; }
+.nav-more-btn svg { transition: transform 150ms var(--ease); }
+.nav-more.open .nav-more-btn svg { transform: rotate(180deg); }
+.nav-more-list { display: none; position: absolute; top: 40px; left: 0; z-index: 30; min-width: 180px; padding: 6px; background: var(--card);
+  border: 1px solid var(--line-2); border-radius: 10px; box-shadow: 0 10px 28px rgba(0, 0, 0, .10); flex-direction: column; }
+.nav-more.open .nav-more-list { display: flex; }
+.nav-more-list a { height: 34px; border-radius: 6px; }
+.nav-more-list a[aria-current="page"] { box-shadow: inset 2px 0 0 var(--accent); border-radius: 0 6px 6px 0; background: var(--raised); }
+@media (max-width: 860px) {
+  /* phone: Methods links sit open under their own label inside the page menu */
+  .nav-more { flex-direction: column; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; }
+  .nav-more-btn { pointer-events: none; height: 32px; color: var(--ink-3); font-size: 13px; padding: 0 12px; }
+  .nav-more-btn svg { display: none; }
+  .nav-more-list { display: flex; position: static; border: 0; box-shadow: none; padding: 0; min-width: 0; background: transparent; }
+  .nav-more-list a { height: 44px; }
+}
+
+/* the GUIDE question each page answers, one line above the title */
+.qa-q { margin: 0 0 10px !important; color: var(--accent-ink) !important; font-size: 14px !important; line-height: 20px !important; font-weight: 500; }
+.qa-n { color: var(--accent-ink); font-weight: 600; margin-right: 8px; }
+.claim-id { font: 500 11px/1 var(--code); padding: 2px 4px; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--line-2); color: var(--ink-3); white-space: nowrap; }
+.claim-id:hover { color: var(--ink); text-decoration: none; }
+.qa-next { margin-top: 48px; border-top: 1px solid var(--line); }
+.qa-next a { display: inline-flex; align-items: center; gap: 8px; padding: 16px 0; color: var(--ink-2); font-size: 14px; }
+.qa-next a:hover { color: var(--ink); text-decoration: none; }
+
+/* brief: one row per question */
+.qrows { list-style: none; margin: 8px 0 0; padding: 0; border-top: 1px solid var(--line-2); }
+.qrow { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: baseline; gap: 4px 20px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.qrow .num-q { font: 600 20px/24px var(--sans); color: var(--accent-ink); font-variant-numeric: tabular-nums; }
+.qrow h2 { margin: 0 0 4px; font-size: 14px; line-height: 20px; font-weight: 400; color: var(--ink-2); }
+.qrow p { margin: 0; color: var(--ink); font-size: 16px; line-height: 23px; font-weight: 500; }
+.qrow .go { font-size: 13px; white-space: nowrap; }
+@media (max-width: 860px) { .qrow { grid-template-columns: 28px minmax(0, 1fr); } .qrow .go { grid-column: 2; } }
+.code { font: 400 12.5px/19px var(--code); background: var(--raised); border-radius: 8px; padding: 12px 14px; overflow-x: auto; white-space: pre; color: var(--ink); margin: 8px 0 0; }
+
+/* evidence table */
+.claims td { vertical-align: top; font-size: 13px; line-height: 19px; }
+.claims td.claim { color: var(--ink); min-width: 16rem; }
+.claims td .src { color: var(--ink-3); font-size: 12px; display: block; margin-top: 4px; }
+.claims tr:target td { background: var(--accent-soft); }
+.claims .ok { color: var(--pos); } .claims .bad { color: var(--neg); }
+.claims td:nth-child(n+4) { color: var(--ink-2); min-width: 13rem; }
+
+/* actions: sensitivity sliders */
+.sens-ctl { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px 32px; margin: 8px 0 20px; }
+.sens-ctl label { display: grid; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.sens-ctl output { color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
+.sens-ctl input[type="range"] { width: 100%; accent-color: var(--accent); min-height: 28px; }
+.sens td.neg { color: var(--neg); } .sens td.pos { color: var(--pos); }
+tr.muted td { color: var(--ink-3); }
+
+
+/* actions: our plan, then the builder */
+.rec td { vertical-align: top; font-size: 13px; line-height: 19px; color: var(--ink-2); }
+.rec td.rec-name { font-size: 14px; font-weight: 500; color: var(--ink); white-space: nowrap; }
+.rec td.rec-name a { color: var(--ink); }
+.rec td strong { font-weight: 600; color: var(--pos); }
+.build { border-top: 1px solid var(--line-2); padding-top: 24px; }
+.build > .card-head p { color: var(--ink-2); max-width: 46rem; }
+.build .stats { margin-top: 8px; }
+details.plan-card { padding: 0; margin-top: 10px; }
+details.plan-card summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 16px; align-items: baseline; padding: 14px 18px; }
+details.plan-card summary::-webkit-details-marker { display: none; }
+details.plan-card summary::before { content: "+"; color: var(--ink-3); width: 12px; flex: none; }
+details.plan-card[open] summary::before { content: "−"; }
+details.plan-card summary > span:first-of-type { flex: 1; min-width: 0; }
+.pc-name { display: block; font-weight: 500; font-size: 14px; color: var(--ink); }
+.pc-target { display: block; font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+details.plan-card dl { margin: 0; padding: 0 18px 16px 46px; }
+@media (max-width: 860px) { .rec td.rec-name { white-space: normal; } details.plan-card dl { padding-left: 18px; } }

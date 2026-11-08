@@ -30,7 +30,7 @@
 
   const mae = (k) => D.holdout.reduce((t, r) => t + Math.abs(r[k] - r.actual), 0) / D.holdout.length;
   function render() {
-    $("#title").textContent = `Daily theo forecast, ${C.periodLabel(S.a, S.b)}`;
+    $("#title").textContent = `Demand, ${C.periodLabel(S.a, S.b)}`;
     $("#series").innerHTML = SERIES.map((s) => `<button type="button" class="chip" data-k="${s.k}" aria-pressed="${s.on}">
       <i style="background:${s.dash ? "repeating-linear-gradient(90deg,var(--series-base) 0 4px,transparent 4px 7px)" : `var(${s.color})`}"></i>${s.k}</button>`).join("");
     const vs = Mo.vsB1.find((r) => r.model === "EL event-type lift");
@@ -109,7 +109,35 @@
     svg.onmouseleave = () => { C.tip(null); $("#fc-x")?.setAttribute("opacity", 0); $("#fc-dots") && ($("#fc-dots").innerHTML = ""); };
   }
 
+  // The two decisions EL changes relative to B1, computed from the frozen holdout forecasts.
+  function decisions() {
+    const isEv = (d) => D.events.some((e) => d >= e.start_date && d <= e.end_date);
+    const sum = (rows, k) => rows.reduce((t, r) => t + r[k], 0);
+    const mde = Math.abs(Mo.measurement[0].mde);
+    const jun = D.holdout.filter((r) => r.d.startsWith("2025-06") && !isEv(r.d));
+    const b1Bias = sum(jun, "B1") / sum(jun, "actual") - 1, elBias = sum(jun, "EL") / sum(jun, "actual") - 1;
+    const wd = (iso) => (new Date(iso + "T12:00:00").getDay() + 6) % 7;            // Mon = 0, as b1Weekday
+    const julB1 = D.july.reduce((t, r) => t + D.b1Weekday[wd(r.gaming_date)], 0);
+    const julCf = D.july.reduce((t, r) => t + r.forecast_level_adj, 0);
+    const row = (l, b, e, hl) => `<tr class="${hl ? "hl" : ""}"><td>${l}</td><td class="num">${b}</td><td class="num">${e}</td></tr>`;
+    $("#dec1").innerHTML = `<thead><tr><th></th><th class="num">B1 weekday mean</th><th class="num">EL; July re-anchored to June</th></tr></thead><tbody>
+      ${row("Over-forecast on June's ordinary days", C.pct(b1Bias, 1, true), C.pct(elBias, 1, true))}
+      ${row("A 30-day test can detect", C.pct(mde, 1), C.pct(mde, 1))}
+      ${row("Expected July theo with no action", C.usd(julB1, { short: true }), C.usd(julCf, { short: true }), true)}</tbody>`;
+    $("#dec1-p").innerHTML = `Weekday norms put July ${C.pct(julB1 / julCf - 1, 1)} too high, more than the ${C.pct(mde, 1)} a test can detect, so doing nothing would look like failure.
+      <strong>Measure July against the June-anchored forecast.</strong>`;
+    const edc = D.holdout.filter((r) => r.d >= "2025-05-16" && r.d <= "2025-05-18");
+    const a = sum(edc, "actual"), b = sum(edc, "B1"), e = sum(edc, "EL");
+    $("#dec2").innerHTML = `<thead><tr><th>EDC weekend, May 16–18</th><th class="num">B1 weekday mean</th><th class="num">EL event-type lift</th></tr></thead><tbody>
+      ${row("Planned theo", C.usd(b, { short: true }), C.usd(e, { short: true }))}
+      ${row("Actual theo", C.usd(a, { short: true }), C.usd(a, { short: true }))}
+      ${row("Miss", C.pct(b / a - 1, 1, true), C.pct(e / a - 1, 1, true), true)}</tbody>`;
+    $("#dec2-p").innerHTML = `Festivals and sports lift play 17–20%; conventions barely 3%.
+      <strong>Staff event weekends to EL, and schedule maintenance away from them.</strong>`;
+  }
+
   function tables() {
+    decisions();
     $("#lvl").textContent = D.julyLevelAdj.toFixed(3);
     // July by week
     const weeks = [];

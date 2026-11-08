@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gilded Ace Forecast</title>
+<title>Gilded Ace Demand</title>
 <meta name="description" content="Daily theo for The Gilded Ace: actuals, the frozen May–June forecast against the weekday baseline, and the July yardstick.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Gilded Ace Forecast">
@@ -21,8 +21,8 @@
 <main class="page" id="main">
   <div class="page-head">
     <div>
-      <h1 id="title">Daily theo forecast</h1>
-      <p>Models learned from Jan 1 – Apr 30 and were frozen before May. The event-type lift model (EL) was picked in advance;
+      <h1 id="title">Demand</h1>
+      <p>Daily theo tracks demand without slot luck. Models learned from Jan 1 – Apr 30 and were frozen before May; the event-type lift model (EL) was picked in advance;
         here it is against the weekday baseline (B1) on the 61 days neither had seen.</p>
     </div>
     <div class="controls" id="period"></div>
@@ -40,6 +40,24 @@
     </div>
     <svg class="chart" id="fc" height="340" role="img" aria-label="Line chart of daily theo with forecasts for May and June"></svg>
     <div class="legend" style="margin-top:12px" id="fc-legend"></div>
+  </section>
+
+  <section class="section" aria-labelledby="dec-h">
+    <h2 id="dec-h">What this forecast changes</h2>
+    <p>Two decisions the weekday baseline would get wrong.</p>
+    <div class="grid-2">
+      <div class="card">
+        <h3 class="chart-h">How to judge July's actions</h3>
+        <div class="card table-wrap" style="margin:12px 0"><table id="dec1"></table></div>
+        <p class="prose" id="dec1-p"></p>
+      </div>
+      <div class="card">
+        <h3 class="chart-h">How to plan for event weekends</h3>
+        <div class="card table-wrap" style="margin:12px 0"><table id="dec2"></table></div>
+        <p class="prose" id="dec2-p"></p>
+      </div>
+    </div>
+    <p class="note">How the model was validated: <a href="models.html">Models</a>.</p>
   </section>
 
   <div class="grid-2 section">

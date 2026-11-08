@@ -21,12 +21,14 @@
     const cost = sum(M, "cost"), face = sum(M, "face"), theo = sum(M, "theo");
     const pre = D.months.slice(0, 4), post = D.months.slice(4);
     const reinPre = sum(pre, "cost") / sum(pre, "theo"), reinPost = sum(post, "cost") / sum(post, "theo");
+    const perMonth = (a, b) => D.months.slice(a, b + 1).reduce((t, m) => t + m.cost, 0) / (b - a + 1);
+    const redPost = (D.may1.cohorts.redeemer.theo[4] + D.may1.cohorts.redeemer.theo[5]) / 2;
     $("#stats").innerHTML = [
       ["Comp cost", C.usd(cost, { short: true }), `${C.usd(face, { short: true })} at menu prices, ${C.int(sum(M, "redemptions"))} redemptions`],
-      ["Reinvestment", C.pct(cost / theo, 2), `of tracked theo; ${C.pct(reinPre, 2)} Jan–Apr, ${C.pct(reinPost, 2)} May–Jun`],
-      ["Points for $1 of comps, Base", `${C.num(D.months[3].tiers.Base.ppd, 0)} → ${C.num(D.months[4].tiers.Base.ppd, 0)}`, `${C.pct(D.months[4].tiers.Base.ppd / D.months[3].tiers.Base.ppd - 1, 0, true)} on May 1, the same cut at every tier`],
-      ["Platinum members", `${C.int(first.tiers.Platinum.members)} → ${C.int(last.tiers.Platinum.members)}`, `${C.MONTHS[S.a]} to ${C.MONTHS[S.b]}; Gold ${C.int(first.tiers.Gold.members)} → ${C.int(last.tiers.Gold.members)}`],
-    ].map(([l, v, f], i) => `<div class="stat"><div class="label">${l}</div><div class="value${i === 2 ? " accent" : ""}">${v}</div><div class="foot">${f}</div></div>`).join("");
+      ["What changed on May 1", `${C.num(D.months[3].tiers.Base.ppd, 0)} → ${C.num(D.months[4].tiers.Base.ppd, 0)} points`, `per $1 of comps: every comp now costs about half the points, at every tier`],
+      ["What the change cost", C.pct(perMonth(4, 5) / perMonth(0, 3) - 1, 0, true), `${C.usd(perMonth(4, 5) - perMonth(0, 3), { short: true })} a month more than Jan–Apr`],
+      ["What it bought", "No extra play", `Comp users played ${C.pct(Math.abs(redPost - 1), 1)} less than in Mar–Apr`],
+    ].map(([l, v, f], i) => `<div class="stat"><div class="label">${l}</div><div class="value${i === 1 ? " accent" : ""}">${v}</div><div class="foot">${f}</div></div>`).join("");
     drawPrice();
   }
 
@@ -117,11 +119,11 @@
         <td class="num">${C.pct(m.ptsRedeemed / m.ptsEarned, 1)}</td></tr>`).join("")}</tbody>`;
 
     const KNOW = [
-      ["What it cost.", `${C.usd(sum(D.months, "cost"), { short: true })} in real cost over six months, ${C.pct(sum(D.months, "cost") / sum(D.months, "theo"), 2)} of tracked theo. Comps cost the casino about ${C.pct(D.costRatio, 0)} of their menu price.`],
-      ["What changed.", "On May 1 the floor-wide redemption rate went from 15 to 7 points per comp dollar. Tier discounts, menu prices and earning stayed the same."],
-      ["What it did, so far.", "Redemptions rose about 6% and comp cost per dollar of theo rose slightly. Guests mostly banked the points."],
-      ["What we can't tell.", "Whether it brought in play. May–June also had the visitor slowdown, and everyone got the new prices at once, so there is no comparison group."],
-      ["What to do about it.", "Either restore the old rate ($1,500, the floor-wide change) or test both prices side by side (the $4,000 pilot). Changing it again for everyone would leave this cut unmeasured a second time."],
+      ["Cost.", `${C.usd(sum(D.months, "cost"), { short: true })} in real cost over six months, ${C.pct(sum(D.months, "cost") / sum(D.months, "theo"), 2)} of tracked theo. A comp costs the casino about ${C.pct(D.costRatio, 0)} of its menu price.`],
+      ["What changed.", "On May 1 the points needed per comp dollar went from 15 to 7, at every tier. Menu prices and earning stayed the same."],
+      ["What the change cost.", "About $2,900 a month more than Jan–Apr (+9%). Redemptions rose about 6%; the share of locals who redeem didn't move."],
+      ["What it bought.", "Nothing visible. Locals who already used comps played 2.5% less in May–Jun than in Mar–Apr; locals overall, 1.2% less."],
+      ["What to do about it.", "Run the $4,000 pilot in August: half of card holders back on the old prices. If play holds, restore the old rate and save about $35K a year."],
     ];
     $("#know").innerHTML = KNOW.map(([h, t]) => `<li><span><strong>${h}</strong> ${t}</span></li>`).join("");
   }

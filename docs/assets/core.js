@@ -191,9 +191,31 @@
   C.savePlan = (p) => { try { localStorage.setItem(PLAN, JSON.stringify(p)); } catch { /* storage off */ } };
 
   // ------------------------------------------------------------- shell
+  // The nav is the GUIDE's six questions, one page each, then a Methods menu with the supporting analysis.
+  // The brand links home to the summary (index.html).
   const PAGES = [
-    ["index.html", "Floor"], ["machines.html", "Machines"], ["players.html", "Players"], ["comps.html", "Comps"], ["forecast.html", "Forecast"],
-    ["weekly.html", "Weekly"], ["models.html", "Models"], ["correlations.html", "Correlations"], ["context.html", "Context"], ["streaks.html", "Streaks"], ["actions.html", "Actions"],
+    ["machines.html", "Machines"], ["forecast.html", "Demand"], ["downtime.html", "Downtime"],
+    ["players.html", "Players"], ["comps.html", "Comps"], ["actions.html", "Actions"],
+  ];
+  const METHODS = [
+    ["evidence.html", "Evidence"], ["floor.html", "Floor plan"], ["weekly.html", "Weekly cycle"], ["models.html", "Models"],
+    ["correlations.html", "Correlations"], ["context.html", "Context"], ["streaks.html", "Streaks"],
+  ];
+  // One entry per GUIDE question: the question verbatim, a one-line answer, and the claims behind it
+  // (Evidence page, recomputed from raw data by scripts/reproduce_claims.py).
+  C.QUESTIONS = [
+    { n: 1, page: "machines.html", q: "Which machines are truly underperforming once you account for exposure, availability and luck?",
+      a: "Not the bottom 10: they're low because of their spot and games. Only M-1158 looks faulty.", claims: ["C1", "C2", "C3", "C4"] },
+    { n: 2, page: "forecast.html", q: "What changed in demand across the floor over the six months, and why?",
+      a: "A steady weekly cycle, lifted by events; June fell 6.5% as fewer visitors came.", claims: ["C5", "C6", "C7", "C8", "C9"] },
+    { n: 3, page: "downtime.html", q: "How much play was lost to downtime, and when?",
+      a: "$90–113K of theo, mostly on the swing shift and on Ridgeline machines.", claims: ["C10", "C11", "C12"] },
+    { n: 4, page: "players.html", q: "What did tracked players wager, get back and net, and how concentrated are those results?",
+      a: "$163.8M wagered, 90.5% paid back, −$15.6M net; the top 10% of losers hold 53% of losses.", claims: ["C13", "C14"] },
+    { n: 5, page: "comps.html", q: "What did the loyalty (comp) program cost, and did anything about it change?",
+      a: "$191K in six months. On May 1 comps got half as cheap in points: cost rose 9%, play didn't.", claims: ["C15", "C16", "C17", "C18"] },
+    { n: 6, page: "actions.html", q: "Which actions would you fund with $100,000, and how would you know they worked?",
+      a: "Move 24 machines to better spots, sign Back Forty, inspect M-1158: $51,900.", claims: ["C19", "C20"] },
   ];
   const ICON = {
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
@@ -212,10 +234,16 @@
       <a class="brand" href="index.html${location.search}" aria-label="Gilded Ace floor review, home">
         <svg class="brand-mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="9" width="18" height="2" rx="1" fill="currentColor" opacity=".35"/><rect x="6" y="7" width="7" height="6" rx="3" fill="currentColor" opacity=".45"/><circle cx="12" cy="10" r="3" fill="currentColor"/></svg>
         Gilded Ace <small>floor review</small></a>
-      <button class="menu-btn" id="menu" type="button" aria-expanded="false" aria-controls="pages">${(PAGES.find(([h]) => h === here) || PAGES[0])[1]}
+      <button class="menu-btn" id="menu" type="button" aria-expanded="false" aria-controls="pages">${(PAGES.concat(METHODS).find(([h]) => h === here) || ["", "Menu"])[1]}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <nav class="nav" id="pages" aria-label="Pages">${PAGES.map(([h, t]) =>
-        `<a href="${h}${location.search}" ${h === here ? 'aria-current="page"' : ""}>${t}</a>`).join("")}</nav>
+        `<a href="${h}${location.search}" ${h === here ? 'aria-current="page"' : ""}>${t}</a>`).join("")}
+        <div class="nav-more">
+          <button type="button" class="nav-more-btn" id="more" aria-expanded="false" aria-controls="more-list" ${METHODS.some(([h]) => h === here) ? 'aria-current="page"' : ""}>Methods
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="nav-more-list" id="more-list">${METHODS.map(([h, t]) =>
+            `<a href="${h}${location.search}" ${h === here ? 'aria-current="page"' : ""}>${t}</a>`).join("")}</div>
+        </div></nav>
       <button class="theme-btn" id="theme" type="button" aria-label="Switch colour theme"></button></div>`;
     document.body.prepend(bar);
     const skip = Object.assign(document.createElement("a"), { className: "skip", href: "#main", textContent: "Skip to content" });
@@ -224,12 +252,19 @@
     const setMenu = (open) => { bar.classList.toggle("open", open); menu.setAttribute("aria-expanded", String(open)); menu.setAttribute("aria-label", open ? "Close the page menu" : "Open the page menu"); };
     setMenu(false);
     menu.onclick = () => setMenu(!bar.classList.contains("open"));
+    // Methods dropdown: opens on click, closes on Escape, on a click elsewhere, or when focus leaves it
+    const more = C.$("#more"), wrap = more.parentElement;
+    const setMore = (open) => { wrap.classList.toggle("open", open); more.setAttribute("aria-expanded", String(open)); };
+    more.onclick = (e) => { e.stopPropagation(); setMore(!wrap.classList.contains("open")); };
+    document.addEventListener("click", (e) => { if (!wrap.contains(e.target)) setMore(false); });
+    wrap.addEventListener("focusout", (e) => { if (!wrap.contains(e.relatedTarget)) setMore(false); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && wrap.classList.contains("open")) { setMore(false); more.focus(); } });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && bar.classList.contains("open")) { setMenu(false); menu.focus(); } });
     document.addEventListener("click", (e) => { if (!bar.contains(e.target)) setMenu(false); });
     const foot = document.createElement("footer");
     foot.className = "footer";
     foot.innerHTML = `<span>The Gilded Ace is fictional and its data synthetic. Weather, LVCVA and Missouri benchmarks are real public data.</span>
-      <span>Code: <code>analysis/</code>, <code>scripts/build_site_data.py</code></span>`;
+      <span>Code: <code>analysis/</code>, <code>scripts/</code>. Check every claim: <code>python scripts/reproduce_claims.py</code></span>`;
     document.body.append(foot);
     const btn = C.$("#theme");
     const dark = () => document.documentElement.dataset.theme === "dark" ||
@@ -251,8 +286,11 @@
   const TOC = {
     "machines.html": [["cat-h", "Luck chart"], ["flags-h", "Flagged"], ["b10-h", "GM's bottom 10"], ["rank-h", "Full ranking"]],
     "players.html": [["lor-h", "Loss concentration"], ["grp-h", "Guest groups"], ["odd-h", "p-values"], ["hitl-h", "Win rate"], ["mon-h", "Payout vs expected"], ["all-h", "Every player"]],
-    "comps.html": [["price-h", "Comp prices"], ["may-h", "May 1"], ["ba-h", "Before and after"], ["tier-h", "Tiers"], ["mon-h", "Month by month"], ["know-h", "What we know"], ["test-h", "How to test it"]],
-    "forecast.html": [["fc-h", "Daily forecast"], ["jul-h", "July baseline"], ["seg-h", "June shortfall"], ["meas-h", "Measuring an action"]],
+    "comps.html": [["price-h", "Comp prices"], ["may-h", "May 1"], ["ba-h", "Before and after"], ["tier-h", "Tiers"], ["mon-h", "Month by month"], ["know-h", "The answer"], ["test-h", "Pilot"]],
+    "forecast.html": [["fc-h", "Daily forecast"], ["dec-h", "What it changes"], ["seg-h", "June shortfall"], ["jul-h", "July baseline"], ["meas-h", "Measuring an action"]],
+    "downtime.html": [["mon-h", "By month"], ["hr-h", "By hour"], ["sh-h", "By shift"], ["mk-h", "By maker"], ["zn-h", "By zone"], ["fix-h", "What would fix it"]],
+    "actions.html": [["rec-h", "Our plan"], ["plan-h", "Try your own"], ["no-h", "Not funded"]],
+    "evidence.html": [["rep-h", "Reproduce"], ["q1-h", "1 Machines"], ["q2-h", "2 Demand"], ["q3-h", "3 Downtime"], ["q4-h", "4 Players"], ["q5-h", "5 Comps"], ["q6-h", "6 Actions"]],
     "models.html": [["proto-h", "The test"], ["forest-h", "All models"], ["tab-h", "Scores"], ["it-h", "Six rounds"], ["floor-h", "Noise floor"], ["p2-h", "Classical and ML"], ["mm-h", "Machine model"], ["iv-h", "Impact estimator"]],
     "weekly.html": [["cal-h", "Calendar"], ["ov-h", "Week shapes"], ["wdt-h", "By weekday"], ["acf-h", "Autocorrelation"], ["tk-h", "Pairwise tests"], ["sg-h", "Locals vs visitors"], ["tr-h", "Trend"], ["tests-h", "All tests"]],
     "correlations.html": [["day-h", "Daily metrics"], ["mac-h", "Machines"], ["ply-h", "Players"], ["err-h", "Forecast errors"], ["meth-h", "Method"]],
@@ -266,7 +304,7 @@
     const nav = document.createElement("nav");
     nav.className = "toc"; nav.setAttribute("aria-label", "On this page");
     nav.innerHTML = `<div class="toc-in"><span class="toc-label">On this page</span>${items.map(([id, t]) => `<a href="#${id}" data-to="${id}">${t}</a>`).join("")}</div>`;
-    const after = C.$(".stats", main) || C.$(".page-head", main);
+    const after = C.$(":scope > .stats", main) || C.$(":scope > .page-head", main);
     after.after(nav);
     const links = C.$$("a", nav);
     nav.onclick = (e) => {
@@ -291,6 +329,26 @@
     addEventListener("scroll", spy, { passive: true }); addEventListener("resize", spy); spy();
   };
 
+  // ------------------------------------------------------------- question pages
+  // Each question page opens with the GUIDE question, the short answer and the decision, and ends with a link
+  // to the next question, so the six pages read as one path from question to decision.
+  C.claimLinks = (ids) => ids.map((id) => `<a href="evidence.html${location.search}#${id}" class="claim-id">${id}</a>`).join(" ");
+  C.question = () => {
+    const here = location.pathname.split("/").pop() || "index.html";
+    const Q = C.QUESTIONS.find((x) => x.page === here), main = C.$("#main");
+    if (!Q || !main) return;
+    const head = C.$(".page-head > div", main);
+    const p = document.createElement("p");
+    p.className = "qa-q"; p.textContent = Q.q;
+    head?.prepend(p);
+    const next = C.QUESTIONS.find((x) => x.n === Q.n + 1);
+    const foot = document.createElement("nav");
+    foot.className = "qa-next"; foot.setAttribute("aria-label", "Next question");
+    foot.innerHTML = next ? `<a href="${next.page}${location.search}">Next: ${C.esc(next.q)} ${C.icon("arrow")}</a>`
+      : `<a href="evidence.html${location.search}">Check the claims ${C.icon("arrow")}</a>`;
+    main.append(foot);
+  };
+
   C.fail = (el, err) => {
     el.innerHTML = `<div class="card"><p>The data files didn't load (${C.esc(err.message)}).</p>
       <p class="muted">The <code>data/</code> folder should sit next to this page. Rebuild it with <code>python scripts/build_site_data.py</code>.</p></div>`;
@@ -303,5 +361,5 @@
   C.scale = (d0, d1, r0, r1) => (v) => r0 + ((v - d0) / (d1 - d0 || 1)) * (r1 - r0);
   C.niceMax = (v) => { const p = Math.pow(10, Math.floor(Math.log10(v))); return Math.ceil(v / p) * p; };
 
-  document.addEventListener("DOMContentLoaded", () => { C.shell(); C.toc(); });
+  document.addEventListener("DOMContentLoaded", () => { C.shell(); C.question(); C.toc(); });
 })();

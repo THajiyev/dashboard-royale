@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Evidence</title>
+<meta name="description" content="Claims and evidence: every headline claim with the table it comes from, the result recomputed from raw data, the alternative explanation tested and its limitation.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gilded Ace Evidence">
+<meta property="og:description" content="Claims and evidence: every headline claim with the table it comes from, the result recomputed from raw data, the alternative explanation tested and its limitation.">
+<meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/evidence.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1>Claims and evidence</h1>
+      <p>Each headline claim, recomputed from the raw tables by a script.</p>
+    </div>
+  </div>
+
+  <section aria-labelledby="rep-h">
+    <h2 id="rep-h">Reproduce it</h2>
+    <pre class="code">python -m pip install pandas pyarrow
+python scripts/reproduce_claims.py           # prints PASS/FAIL per claim, rewrites docs/data/claims.js
+python scripts/reproduce_claims.py --check   # exits 1 if any claim no longer matches</pre>
+    <p class="note" id="rep-note"></p>
+  </section>
+
+  <div id="groups"></div>
+</main>
+</body>
+</html>

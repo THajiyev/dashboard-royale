@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Downtime</title>
+<meta name="description" content="How much play The Gilded Ace lost to machine downtime, when it happened, which machines and shifts carry it, and what would reduce it.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gilded Ace Downtime">
+<meta property="og:description" content="How much play The Gilded Ace lost to machine downtime, when it happened, which machines and shifts carry it, and what would reduce it.">
+<meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/downtime.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1 id="title">Downtime</h1>
+      <p>Each fault valued at what its machine earns in that hour.</p>
+    </div>
+    <div class="controls" id="period"></div>
+  </div>
+
+  <section class="stats" id="stats" aria-label="Downtime summary"></section>
+
+  <section class="card" aria-labelledby="mon-h">
+    <div class="card-head">
+      <div>
+        <h2 id="mon-h">Down hours by month</h2>
+      </div>
+      <div class="legend">
+        <span><i class="box" style="background:var(--accent)"></i>Waiting for a technician</span>
+        <span><i class="box" style="background:var(--ink-3);opacity:.55"></i>Being fixed</span>
+      </div>
+    </div>
+    <svg class="chart" id="mon" height="240" role="img" aria-label="Stacked bar chart of fault hours per month, split into waiting and fixing time"></svg>
+    <div class="card table-wrap" style="margin-top:16px"><table id="mon-t"></table></div>
+  </section>
+
+  <div class="grid-2 section">
+    <section class="card" aria-labelledby="hr-h">
+      <h2 id="hr-h">When in the day, Jan–Jun</h2>
+      <p class="small muted" style="margin:2px 0 12px">Theo lost, by hour the fault opened.</p>
+      <svg class="chart" id="hr" height="240" role="img" aria-label="Bar chart of theo lost to faults by local hour of day, with shift bands"></svg>
+    </section>
+    <section aria-labelledby="sh-h">
+      <h2 id="sh-h">By shift, Jan–Jun</h2>
+      <p class="prose" style="margin:4px 0 16px">Swing covers the busiest hours. Grave waits longest, but the floor is quiet.</p>
+      <div class="card table-wrap"><table id="sh"></table></div>
+    </section>
+  </div>
+
+  <div class="grid-2 section">
+    <section aria-labelledby="mk-h">
+      <h2 id="mk-h">By manufacturer</h2>
+      <p class="prose" style="margin:4px 0 16px">Only Ridgeline's sweep break-even is plausible.</p>
+      <div class="card table-wrap"><table id="mk"></table></div>
+      <p class="note">Rate adjusted for age, volatility and occupancy (95% CI); raw ratio 3.6×.</p>
+    </section>
+    <section aria-labelledby="zn-h">
+      <h2 id="zn-h">By zone</h2>
+      <p class="prose" style="margin:4px 0 16px">Back Forty loses little, so downtime isn't why the bottom 10 are low.</p>
+      <div class="card table-wrap"><table id="zn"></table></div>
+    </section>
+  </div>
+
+  <section class="section" aria-labelledby="fix-h">
+    <h2 id="fix-h">What would fix it</h2>
+    <p>Every fault replayed through the real roster, adding one technician per shift. Most downtime is fix time, which more staff don't shorten.</p>
+    <div class="card table-wrap"><table id="tech"></table></div>
+    <p class="note" id="fix-note"></p>
+  </section>
+
+  <section class="section" aria-labelledby="top-h">
+    <h2 id="top-h">Machines that lost the most</h2>
+    <div class="card table-wrap"><table id="top"></table></div>
+  </section>
+</main>
+</body>
+</html>
