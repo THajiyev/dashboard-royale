@@ -35,6 +35,7 @@
     ["Iteration 3", "EL2A: refit weekly, level anchored to the last 28 non-event days. Best on ordinary days, but it over-forecast Locals Week by about 10%."],
     ["Iteration 4", "Holiday flags, a payday term, 2023–24 seasonality and the latest published city visitor trend. Holiday flags moved error by ±2%; the seasonal pattern made it worse."],
     ["Iteration 5", "Separate weekly forecasts for locals and visitors, so a locals promotion lifts only locals. It removed part of the Locals Week overshoot. A July test with a written decision rule is planned."],
+    ["Iteration 6", "EL times a recent-demand factor: 128 variants (7–28-day averages, EMAs, weekday-specific levels, four ways of handling event days, 25–100% strength). With one forecast on Apr 30 every variant lost to EL, because a strong April pushed the factor up just before demand fell. With weekly refresh the best variant is the 28-day anchor already in EL2A. Not adopted."],
   ];
 
   document.addEventListener("DOMContentLoaded", async () => {

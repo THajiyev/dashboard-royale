@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Weekly Pattern</title>
+<meta name="description" content="The seven-day cycle in floor theo: how it repeats week after week, how stable it is, and the tests behind it.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gilded Ace Weekly Pattern">
+<meta property="og:description" content="The seven-day cycle in floor theo: how it repeats week after week, how stable it is, and the tests behind it.">
+<meta name="theme-color" content="#f7f7f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141415" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/charts.js"></script>
+<script defer src="assets/weekly.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1>The weekly pattern</h1>
+      <p>Floor theo runs on a seven-day cycle: a quiet Tuesday, a busy Saturday, and the same shape again the next week.
+        This page shows how closely it repeats and the tests behind the claim. Every forecast on this site starts from it.</p>
+    </div>
+  </div>
+
+  <section class="stats" id="stats" aria-label="Weekly pattern summary"></section>
+
+  <section class="card" aria-labelledby="cal-h">
+    <div class="card-head">
+      <div>
+        <h2 id="cal-h">Every day, one column per week</h2>
+        <p>Read across a row to follow one weekday through the half-year. The Friday and Saturday bands never break.</p>
+      </div>
+      <div class="seg" role="group" aria-label="Colour by" id="cal-mode">
+        <button type="button" data-m="usd" aria-pressed="true">Theo</button>
+        <button type="button" data-m="rel" aria-pressed="false">Against its week</button>
+      </div>
+    </div>
+    <svg class="chart" id="cal" role="img" aria-label="Calendar heatmap of daily theo, weekdays as rows and weeks as columns"></svg>
+    <div class="legend" style="margin-top:12px;align-items:center" id="cal-legend"></div>
+  </section>
+
+  <div class="grid-2 section">
+    <section class="card" aria-labelledby="ov-h">
+      <div class="card-head"><div>
+        <h2 id="ov-h">Each week's shape, stacked</h2>
+        <p>Each grey line is one complete week, divided by that week's average day. Hover a line to see which week it is.</p>
+      </div></div>
+      <svg class="chart" id="ov" height="300" role="img" aria-label="Line chart overlaying every week's day-by-day profile"></svg>
+      <div class="legend" style="margin-top:12px"><span><i class="c1"></i>Jan–Apr average</span><span><i class="c2"></i>May–Jun average</span><span><i style="background:var(--series-base);opacity:.6"></i>One week</span></div>
+    </section>
+    <section class="card" aria-labelledby="wd-h">
+      <div class="card-head"><div>
+        <h2 id="wd-h">Weekday levels, before and after May 1</h2>
+        <p>Each day relative to its month's average ordinary day, with 95% intervals. The two halves sit on top of each other.</p>
+      </div></div>
+      <svg class="chart" id="wd" height="300" role="img" aria-label="Dot and interval chart of weekday index for Jan–Apr and May–Jun"></svg>
+      <div class="legend" style="margin-top:12px"><span><i class="c1"></i>Jan–Apr</span><span><i class="c2"></i>May–Jun</span></div>
+    </section>
+  </div>
+
+  <section class="section" aria-labelledby="wdt-h">
+    <h2 id="wdt-h">By weekday</h2>
+    <p>Ordinary days only (no event from the events table). The p-value tests whether that weekday's level changed between
+      Jan–Apr and May–Jun (Welch t-test on the log index); q corrects it for testing seven weekdays.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px;margin-top:16px"><table id="wdt"></table></div>
+  </section>
+
+  <div class="grid-2 section">
+    <section class="card" aria-labelledby="acf-h">
+      <div class="card-head">
+        <div>
+          <h2 id="acf-h">How much today looks like a day k days ago</h2>
+          <p>Autocorrelation of log theo. Spikes every 7 days mean the cycle repeats; the shaded band is what noise alone would give.</p>
+        </div>
+        <div class="seg" role="group" aria-label="Series" id="acf-mode">
+          <button type="button" data-m="raw" aria-pressed="true">Theo</button>
+          <button type="button" data-m="resid" aria-pressed="false">Weekday removed</button>
+        </div>
+      </div>
+      <svg class="chart" id="acf" height="260" role="img" aria-label="Bar chart of autocorrelation by lag in days"></svg>
+      <p class="note" id="acf-note"></p>
+    </section>
+    <section class="card" aria-labelledby="sp-h">
+      <div class="card-head"><div>
+        <h2 id="sp-h">Which cycles carry the variation</h2>
+        <p>Periodogram of log theo, linear trend removed. One peak, at seven days, holds most of the day-to-day variation.</p>
+      </div></div>
+      <svg class="chart" id="sp" height="260" role="img" aria-label="Periodogram: share of variance by cycle length"></svg>
+      <p class="note" id="sp-note"></p>
+    </section>
+  </div>
+
+  <div class="grid-2 section">
+    <section class="card" aria-labelledby="tk-h">
+      <div class="card-head"><div>
+        <h2 id="tk-h">Is every weekday different from every other?</h2>
+        <p>Tukey's test on all 21 pairs, month level removed. Each cell is the row day's level against the column day's; the stronger the green, the smaller the p-value. A grey pair would be indistinguishable.</p>
+      </div></div>
+      <div class="matrix-wrap"><svg class="chart" id="tk" role="img" aria-label="Matrix of pairwise weekday differences and Tukey-adjusted p-values"></svg></div>
+      <div class="legend" style="margin-top:8px" id="tk-legend"></div>
+    </section>
+    <section class="card" aria-labelledby="mp-h">
+      <div class="card-head"><div>
+        <h2 id="mp-h">Does each month repeat the same week?</h2>
+        <p>Correlation between months' weekday profiles (7 points each). Values near 1 mean the same shape, whatever the level.</p>
+      </div></div>
+      <div class="matrix-wrap"><svg class="chart" id="mp" role="img" aria-label="Correlation matrix of monthly weekday profiles"></svg></div>
+      <p class="note" id="mp-note"></p>
+    </section>
+  </div>
+
+  <div class="grid-2 section">
+    <section class="card" aria-labelledby="sg-h">
+      <div class="card-head"><div>
+        <h2 id="sg-h">Locals and visitors keep different weeks</h2>
+        <p>Weekday index for each group, ordinary days, 95% intervals. Visitors lean harder on Saturday and Sunday.</p>
+      </div></div>
+      <svg class="chart" id="sg" height="280" role="img" aria-label="Line chart of weekday index for locals and visitors"></svg>
+      <div class="legend" style="margin-top:12px"><span><i class="c1"></i>Locals</span><span><i class="c2"></i>Visitors and uncarded</span></div>
+      <p class="note" id="sg-note"></p>
+    </section>
+    <section class="card" aria-labelledby="tr-h">
+      <div class="card-head"><div>
+        <h2 id="tr-h">The trend under the cycle</h2>
+        <p>Week totals, Monday to Sunday. Taking whole weeks cancels the cycle, so what's left is the level. Lines are fitted
+          to weeks without an event.</p>
+      </div></div>
+      <svg class="chart" id="tr" height="280" role="img" aria-label="Line chart of weekly theo totals with fitted trends"></svg>
+      <div class="legend" style="margin-top:12px"><span><i class="box" style="background:var(--ink-2);width:8px;height:8px;border-radius:50%"></i>Ordinary week</span><span><i class="box" style="width:8px;height:8px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--accent);background:transparent"></i>Event week</span><span><i class="c1"></i>Jan–Apr trend</span><span><i class="c2"></i>May–Jun trend</span></div>
+      <p class="note" id="tr-note"></p>
+    </section>
+  </div>
+
+  <section class="section" aria-labelledby="tests-h">
+    <h2 id="tests-h">The tests behind it</h2>
+    <p>Days of a listed event are left out unless noted (they are spikes, not the pattern). Daily data are autocorrelated,
+      so treat tiny p-values as "far beyond chance", not as exact.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px;margin-top:16px"><table class="tests" id="tests"></table></div>
+    <p class="note">Source: <span class="mono">scripts/build_site_patterns.py</span> (property_day, sessions joined to players for the locals split).</p>
+  </section>
+</main>
+</body>
+</html>

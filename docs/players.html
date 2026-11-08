@@ -5,9 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gilded Ace Players</title>
 <meta name="description" content="What tracked players wagered, got back and netted, how concentrated the results are, and how each player's result compares with what the games' odds predict.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gilded Ace Players">
+<meta property="og:description" content="What tracked players wagered, got back and netted, how concentrated the results are, and how each player's result compares with what the games' odds predict.">
+<meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <script defer src="assets/core.js"></script>
 <script defer src="assets/players.js"></script>
@@ -95,7 +100,7 @@
     </div>
     <div id="all-wrap" hidden>
       <div class="controls" style="margin-bottom:12px">
-        <input type="search" id="all-q" placeholder="Player ID" aria-label="Find a player by ID">
+        <label class="field search">Find <input type="search" id="all-q" placeholder="Player ID"></label>
         <label class="field">Sort <select id="all-sort" aria-label="Sort players">
           <option value="diff">Difference, $</option><option value="pctd">Difference, %</option><option value="z">Payout z</option>
           <option value="mp">Payout p</option><option value="hz">Win-rate z</option><option value="hp">Win-rate p</option><option value="ci">Wagered</option></select></label>

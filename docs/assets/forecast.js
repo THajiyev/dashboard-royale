@@ -103,7 +103,7 @@
       const ev = D.events.find((v) => r.d >= v.start_date && r.d <= v.end_date);
       $("#fc-dots").innerHTML = `<circle cx="${x(i)}" cy="${y(r.theo)}" r="4" fill="var(--series-actual)" stroke="var(--card)" stroke-width="2"/>` +
         (h ? on.map((s) => `<circle cx="${x(i)}" cy="${y(h[s.k])}" r="4" fill="var(${s.color})" stroke="var(--card)" stroke-width="2"/>`).join("") : "");
-      C.tip(C.tipRows(C.date(r.d, { weekday: "short", month: "short", day: "numeric" }) + (ev ? ` · ${C.esc(ev.name)}` : ""),
+      C.tip(C.tipRows(C.date(r.d, { weekday: "short", month: "short", day: "numeric" }) + (ev ? `, ${C.esc(ev.name)}` : ""),
         [["Actual", C.usd(r.theo)], ...(h ? on.map((s) => [s.k, `${C.usd(h[s.k])} (${C.pct(h[s.k] / r.theo - 1, 1, true)})`]) : [])]), e);
     };
     svg.onmouseleave = () => { C.tip(null); $("#fc-x")?.setAttribute("opacity", 0); $("#fc-dots") && ($("#fc-dots").innerHTML = ""); };

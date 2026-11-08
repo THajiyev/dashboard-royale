@@ -96,7 +96,7 @@
       const i = Math.round(((px - P.l - 4) / (W - P.l - P.r - 8)) * (sorted.length - 1));
       const d = sorted[i]; if (!d) return C.tip(null);
       const ln = $("#cat-x"); ln.setAttribute("x1", x(i)); ln.setAttribute("x2", x(i)); ln.setAttribute("opacity", 0.4);
-      C.tip(C.tipRows(`<span class="mono">${d.m.id}</span> · ${C.esc(d.m.theme)}`, [
+      C.tip(C.tipRows(`<span class="mono">${d.m.id}</span>, ${C.esc(d.m.theme)}`, [
         ["Zone", zoneName[d.zone]], ["Luck", C.usd(d.s.luck, { plus: true })], ["z", C.num(d.s.z, 2, true)],
         ["BH q", d.q < 0.001 ? "< 0.001" : d.q.toFixed(2)], ["Hold", `${C.pct(d.s.hold)} vs ${C.pct(d.s.theoHold)}`],
       ]) + (d.flag ? `<div class="small" style="margin-top:4px;color:var(--neg)">${d.flag.level === "flag" ? "Flagged" : "Watch"}: ${C.esc(d.flag.reasons[0])}</div>` : "") + (d.m.b10 ? `<div class="small muted" style="margin-top:4px">GM's bottom 10, rank ${d.m.b10.rank}</div>` : ""), e);
@@ -145,7 +145,7 @@
       <th class="num">House win</th><th class="num">Theo</th><th class="num">Luck</th><th class="num">z</th><th class="num">BH q</th><th>Hold</th><th>Flag</th></tr></thead>
       <tbody>${shown.map((r) => `<tr id="row-${r.m.id}" class="${S.hl === r.m.id ? "on" : ""}${r.m.b10 ? " hl" : ""}">
         <td class="num">${r.rank}</td>
-        <td><span class="mono">${r.m.id}</span><span class="sub">${C.esc(r.m.theme)} · ${C.esc(r.m.mfr)}</span></td>
+        <td><span class="mono">${r.m.id}</span><span class="sub">${C.esc(r.m.theme)}, ${C.esc(r.m.mfr)}</span></td>
         <td>${C.esc(zoneName[r.zone] ?? "")}</td>
         <td class="num">${r.s.days}</td><td class="num">${C.usd(r.s.ci, { short: true })}</td>
         <td class="num">${C.usd(r.s.win, { short: true })}</td><td class="num">${C.usd(r.s.theo, { short: true })}</td>

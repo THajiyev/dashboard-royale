@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Streaks</title>
+<meta name="description" content="Is any player due a win after a run of losses? We tested it on every carded visit: they aren't. What can be predicted is how big a player's swings will be.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gilded Ace Streaks">
+<meta property="og:description" content="Is any player due a win after a run of losses? We tested it on every carded visit: they aren't. What can be predicted is how big a player's swings will be.">
+<meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/charts.js"></script>
+<script defer src="assets/streaks.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1>Nobody is due</h1>
+      <p>Can we tell which players are about to win big after a run of losses, or lose big after a run of wins? We tested it on every carded visit, Jan–Jun 2025.
+        Past results don't predict the next one. What can be predicted is how big a player's swings will be, not which way they'll go.</p>
+    </div>
+  </div>
+
+  <section class="stats" id="stats" aria-label="Streak summary"></section>
+
+  <section class="card" aria-labelledby="st-h">
+    <div class="card-head">
+      <div>
+        <h2 id="st-h">A losing streak doesn't make the next visit a winner</h2>
+        <p>Share of visits that ended ahead (the player left with more than they put in), by the streak they were on going in.
+          The grey bands show the same visits shuffled into random order within each player: what fully independent visits would give.
+          If players were due, the dots on the left would climb above the bands.</p>
+      </div>
+      <div class="legend">
+        <span><i class="box" style="background:var(--accent);width:8px;height:8px;border-radius:50%"></i>Actual order, 95% interval</span>
+        <span><i class="box" style="background:var(--band);box-shadow:inset 0 0 0 1px var(--line-2)"></i>Random order, 95% range</span>
+        <span><i class="dash"></i><span id="st-all">All visits</span></span>
+      </div>
+    </div>
+    <svg class="chart" id="st" height="300" role="img" aria-label="Share of next visits that end ahead, by losing or winning streak going in, against shuffled visit order"></svg>
+    <p class="note" id="st-note"></p>
+  </section>
+
+  <div class="grid-2 section">
+    <section class="card" aria-labelledby="hv-h">
+      <div class="card-head"><div>
+        <h2 id="hv-h">Unlucky in Jan–Mar, no luckier in Apr–Jun</h2>
+        <p>Players who played in both halves, split into tenths by luck in Jan–Mar. Luck is in standard deviations, so heavy and light players compare.
+          The dashed line is what evening out would look like.</p>
+      </div></div>
+      <svg class="chart" id="hv" height="300" role="img" aria-label="Average luck in April to June for each tenth of January to March luck"></svg>
+      <div class="legend" style="margin-top:8px"><span><i class="box" style="background:var(--accent);width:8px;height:8px;border-radius:50%"></i>Apr–Jun average, 95% interval</span><span><i class="dash"></i>If luck evened out</span><span><i style="background:var(--ink-3)"></i>All players' average</span></div>
+      <p class="note" id="hv-note"></p>
+    </section>
+    <section aria-labelledby="bh-h">
+      <h2 id="bh-h">Being behind in dollars changes nothing either</h2>
+      <p class="prose" style="margin:4px 0 16px">Every visit by a player with at least three earlier visits, split into fifths by how far ahead or behind
+        expectation they were going in.</p>
+      <div class="card table-wrap" style="padding:8px 8px 4px"><table id="bh"></table></div>
+      <p class="note" id="bh-note"></p>
+    </section>
+  </div>
+
+  <div class="grid-2 section">
+    <section class="card" aria-labelledby="sw-h">
+      <div class="card-head"><div>
+        <h2 id="sw-h">What does predict: how big the swing will be</h2>
+        <p>Players in tenths by how hard they played in Jan–Mar (the standard deviation of their result). Bars are the typical size of their
+          Apr–Jun luck, win or lose; ticks are the biggest 10%.</p>
+      </div></div>
+      <svg class="chart" id="sw" height="280" role="img" aria-label="Typical size of April to June luck by tenth of January to March swing size"></svg>
+      <div class="legend" style="margin-top:8px"><span><i class="box" style="background:var(--series-base)"></i>Median size</span><span><i style="background:var(--ink)"></i>90th percentile</span></div>
+      <p class="note" id="sw-note"></p>
+    </section>
+    <section class="card" aria-labelledby="he-h">
+      <div class="card-head"><div>
+        <h2 id="he-h">And the house edge decides the direction</h2>
+        <p>The same tenths: share who ended Apr–Jun ahead. The more someone plays, the more the edge outweighs luck, so heavy players
+          are the least likely to finish ahead.</p>
+      </div></div>
+      <svg class="chart" id="he" height="280" role="img" aria-label="Share of players ending April to June ahead, by tenth of January to March swing size"></svg>
+      <p class="note" id="he-note"></p>
+    </section>
+  </div>
+
+  <div class="grid-2 section">
+    <section aria-labelledby="cb-h">
+      <h2 id="cb-h">Does a bad visit keep them away?</h2>
+      <p class="prose" style="margin:4px 0 16px">Visits split into fifths by luck, and the share followed by another visit within 30 days.
+        Only visits that ended 30 or more days before the data ends.</p>
+      <div class="card table-wrap" style="padding:8px 8px 4px"><table id="cb"></table></div>
+      <p class="note" id="cb-note"></p>
+    </section>
+    <section aria-labelledby="why-h">
+      <h2 id="why-h">Why nobody is due</h2>
+      <div class="card" style="margin-top:16px"><ul class="steps" id="why"></ul></div>
+    </section>
+  </div>
+
+  <section class="section" aria-labelledby="tests-h">
+    <h2 id="tests-h">The tests behind it</h2>
+    <p>Luck per visit is the actual payout minus the expected payout (coin-in less theo), as on the Players page. Its standard deviation is exact,
+      from each game's payout variance and the bets placed.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px;margin-top:16px"><table class="tests" id="tests"></table></div>
+    <p class="note">Source: <code>scripts/build_site_streaks.py</code> (sessions joined into observed visits, game_math for payout variance).</p>
+  </section>
+</main>
+</body>
+</html>

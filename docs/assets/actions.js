@@ -103,10 +103,20 @@
       ["Expected theo, July", C.usd(effects.reduce((t, v) => t + v, 0), { plus: true }), "Sum of the point estimates below"],
     ].map(([l, v, f], i) => `<div class="stat"><div class="label">${l}</div><div class="value${i === 0 ? " accent" : ""}">${v}</div><div class="foot" ${(i === 0 && over) || (i === 2 && (tooMany || comp)) ? 'style="color:var(--neg)"' : ""}>${f}</div></div>`).join("");
 
+    // budget bar: one brass step per funded action (largest first), the kept money hatched
+    const parts = types.map((k) => ({ a: act(k), c: cost(act(k), qty[k]) })).sort((p, q) => q.c - p.c);
+    const scaleTo = Math.max(C.BUDGET, total);
+    const kept = Math.max(0, C.BUDGET - total);
+    $("#budget").innerHTML = `<div class="budget-bar" role="img" aria-label="${C.esc(parts.map((p) => `${p.a.name} ${C.usd(p.c)}`).concat(`kept ${C.usd(kept)}`).join(", "))}">
+        ${parts.map((p, i) => `<span class="${over ? "over" : "b" + Math.min(i, 3)}" style="flex:0 0 ${(p.c / scaleTo) * 100}%" title="${C.esc(p.a.name)}: ${C.usd(p.c)}"></span>`).join("")}
+        ${kept ? '<span class="kept" title="Kept"></span>' : ""}</div>
+      <div class="budget-key">${parts.map((p, i) => `<span><i class="${over ? "over" : "b" + Math.min(i, 3)}" style="background:${over ? "var(--neg)" : ["var(--accent)", "color-mix(in srgb, var(--accent) 70%, var(--card))", "color-mix(in srgb, var(--accent) 45%, var(--card))", "color-mix(in srgb, var(--accent) 28%, var(--card))"][Math.min(i, 3)]}"></i>${C.esc(p.a.name)} <span class="num">${C.usd(p.c)}</span></span>`).join("")}
+        ${kept ? `<span><i style="background:var(--raised);box-shadow:inset 0 0 0 1px var(--line-2)"></i>Kept <span class="num">${C.usd(kept)}</span></span>` : ""}</div>`;
+
     $("#catalog").innerHTML = CAT.map((a) => {
       const n = qty[a.action_type_id] || 0, floor = a.action_type_id === "A-MOVE-MACHINE";
       return `<div class="act ${n ? "on" : ""}" style="grid-template-columns:1fr auto"><div><div class="name">${C.esc(a.name)}</div>
-        <div class="meta">${C.usd(a.unit_cost_cents / 100)}${a.recurring_cost_cents_per_day ? ` + ${C.usd(a.recurring_cost_cents_per_day / 100)}/day` : ""} · lead ${a.lead_days} d · up to ${a.quantity_limit}${floor ? " · set on the floor plan" : ""}</div></div>
+        <div class="meta">${C.usd(a.unit_cost_cents / 100)}${a.recurring_cost_cents_per_day ? ` + ${C.usd(a.recurring_cost_cents_per_day / 100)}/day` : ""}, lead ${a.lead_days} d, up to ${a.quantity_limit}${floor ? ", set on the floor plan" : ""}</div></div>
         ${floor ? `<a class="btn" href="index.html" aria-label="Place moves on the floor plan">${n}</a>` : `<div class="stepper" role="group" aria-label="${C.esc(a.name)} quantity">
           <button type="button" data-d="-1" data-id="${a.action_type_id}" ${n ? "" : "disabled"} aria-label="Fewer">−</button><output>${n}</output>
           <button type="button" data-d="1" data-id="${a.action_type_id}" ${n >= a.quantity_limit ? "disabled" : ""} aria-label="More">+</button></div>`}</div>`;
@@ -125,7 +135,7 @@
         <p class="mono small" style="color:var(--ink-3)">${a.action_type_id} × ${qty[k]}</p></div><div class="num" style="font-size:18px">${C.usd(cost(a, qty[k]))}</div></div>
         <dl><dt>Target</dt><dd>${C.esc(b.target)}</dd><dt>Expected effect</dt><dd>${b.effectText}</dd>
         ${b.unc ? `<dt>Uncertainty</dt><dd>${b.unc}</dd>` : ""}${b.meas ? `<dt>How we'd measure it</dt><dd>${b.meas}</dd>` : ""}
-        ${b.ev.length ? `<dt>Evidence</dt><dd>${b.ev.map(([t, h]) => `<a href="${h}">${t}</a>`).join(" · ")}</dd>` : ""}</dl></article>`;
+        ${b.ev.length ? `<dt>Evidence</dt><dd>${b.ev.map(([t, h]) => `<a href="${h}">${t}</a>`).join(", ")}</dd>` : ""}</dl></article>`;
     }).join("") : '<p class="empty">Nothing funded: the whole budget is kept.</p>';
 
     $("#no").innerHTML = `<thead><tr><th>Action</th><th>Why not</th><th>Evidence</th></tr></thead><tbody>${NOT.map(([a, w, h]) =>

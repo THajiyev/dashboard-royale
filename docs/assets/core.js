@@ -193,7 +193,7 @@
   // ------------------------------------------------------------- shell
   const PAGES = [
     ["index.html", "Floor"], ["machines.html", "Machines"], ["players.html", "Players"], ["comps.html", "Comps"], ["forecast.html", "Forecast"],
-    ["models.html", "Models"], ["context.html", "Context"], ["actions.html", "Actions"],
+    ["weekly.html", "Weekly"], ["models.html", "Models"], ["correlations.html", "Correlations"], ["context.html", "Context"], ["streaks.html", "Streaks"], ["actions.html", "Actions"],
   ];
   const ICON = {
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
@@ -212,14 +212,24 @@
       <a class="brand" href="index.html${location.search}" aria-label="Gilded Ace floor review, home">
         <svg class="brand-mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="9" width="18" height="2" rx="1" fill="currentColor" opacity=".35"/><rect x="6" y="7" width="7" height="6" rx="3" fill="currentColor" opacity=".45"/><circle cx="12" cy="10" r="3" fill="currentColor"/></svg>
         Gilded Ace <small>floor review</small></a>
-      <nav class="nav" aria-label="Pages">${PAGES.map(([h, t]) =>
+      <button class="menu-btn" id="menu" type="button" aria-expanded="false" aria-controls="pages">${(PAGES.find(([h]) => h === here) || PAGES[0])[1]}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <nav class="nav" id="pages" aria-label="Pages">${PAGES.map(([h, t]) =>
         `<a href="${h}${location.search}" ${h === here ? 'aria-current="page"' : ""}>${t}</a>`).join("")}</nav>
       <button class="theme-btn" id="theme" type="button" aria-label="Switch colour theme"></button></div>`;
     document.body.prepend(bar);
+    const skip = Object.assign(document.createElement("a"), { className: "skip", href: "#main", textContent: "Skip to content" });
+    document.body.prepend(skip);
+    const menu = C.$("#menu");
+    const setMenu = (open) => { bar.classList.toggle("open", open); menu.setAttribute("aria-expanded", String(open)); menu.setAttribute("aria-label", open ? "Close the page menu" : "Open the page menu"); };
+    setMenu(false);
+    menu.onclick = () => setMenu(!bar.classList.contains("open"));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && bar.classList.contains("open")) { setMenu(false); menu.focus(); } });
+    document.addEventListener("click", (e) => { if (!bar.contains(e.target)) setMenu(false); });
     const foot = document.createElement("footer");
     foot.className = "footer";
     foot.innerHTML = `<span>The Gilded Ace is fictional and its data synthetic. Weather, LVCVA and Missouri benchmarks are real public data.</span>
-      <span>Code: <span class="mono">analysis/</span>, <span class="mono">scripts/build_site_data.py</span></span>`;
+      <span>Code: <code>analysis/</code>, <code>scripts/build_site_data.py</code></span>`;
     document.body.append(foot);
     const btn = C.$("#theme");
     const dark = () => document.documentElement.dataset.theme === "dark" ||
@@ -235,9 +245,55 @@
     };
   };
 
+  // ------------------------------------------------------------- on this page
+  // Long pages get a sticky row of section links under the top bar, highlighting the section in view.
+  // Clicks scroll without touching the hash (Machines uses the hash to pick a machine).
+  const TOC = {
+    "machines.html": [["cat-h", "Luck chart"], ["flags-h", "Flagged"], ["b10-h", "GM's bottom 10"], ["rank-h", "Full ranking"]],
+    "players.html": [["lor-h", "Loss concentration"], ["grp-h", "Guest groups"], ["odd-h", "p-values"], ["hitl-h", "Win rate"], ["mon-h", "Payout vs expected"], ["all-h", "Every player"]],
+    "comps.html": [["price-h", "Comp prices"], ["may-h", "May 1"], ["ba-h", "Before and after"], ["tier-h", "Tiers"], ["mon-h", "Month by month"], ["know-h", "What we know"], ["test-h", "How to test it"]],
+    "forecast.html": [["fc-h", "Daily forecast"], ["jul-h", "July baseline"], ["seg-h", "June shortfall"], ["meas-h", "Measuring an action"]],
+    "models.html": [["proto-h", "The test"], ["forest-h", "All models"], ["tab-h", "Scores"], ["it-h", "Six rounds"], ["floor-h", "Noise floor"], ["p2-h", "Classical and ML"], ["mm-h", "Machine model"], ["iv-h", "Impact estimator"]],
+    "weekly.html": [["cal-h", "Calendar"], ["ov-h", "Week shapes"], ["wdt-h", "By weekday"], ["acf-h", "Autocorrelation"], ["tk-h", "Pairwise tests"], ["sg-h", "Locals vs visitors"], ["tr-h", "Trend"], ["tests-h", "All tests"]],
+    "correlations.html": [["day-h", "Daily metrics"], ["mac-h", "Machines"], ["ply-h", "Players"], ["err-h", "Forecast errors"], ["meth-h", "Method"]],
+    "context.html": [["cl-h", "Walkway closure"], ["w-h", "Weather"], ["ev-h", "Events"], ["city-h", "Las Vegas visits"], ["out-h", "Left out"]],
+    "streaks.html": [["st-h", "Streaks"], ["hv-h", "Half to half"], ["bh-h", "Behind"], ["sw-h", "Swing size"], ["he-h", "House edge"], ["cb-h", "Coming back"], ["why-h", "Why"], ["tests-h", "Tests"]],
+  };
+  C.toc = () => {
+    const here = location.pathname.split("/").pop() || "index.html";
+    const items = (TOC[here] || []).filter(([id]) => document.getElementById(id));
+    const main = C.$("#main"); if (items.length < 3 || !main) return;
+    const nav = document.createElement("nav");
+    nav.className = "toc"; nav.setAttribute("aria-label", "On this page");
+    nav.innerHTML = `<div class="toc-in"><span class="toc-label">On this page</span>${items.map(([id, t]) => `<a href="#${id}" data-to="${id}">${t}</a>`).join("")}</div>`;
+    const after = C.$(".stats", main) || C.$(".page-head", main);
+    after.after(nav);
+    const links = C.$$("a", nav);
+    nav.onclick = (e) => {
+      const a = e.target.closest("a[data-to]"); if (!a) return;
+      e.preventDefault();
+      const t = document.getElementById(a.dataset.to);
+      t.closest("section")?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+      t.setAttribute("tabindex", "-1"); t.focus({ preventScroll: true });
+    };
+    const spy = () => {
+      const line = nav.getBoundingClientRect().bottom + 24;
+      let cur = null;
+      for (const [id] of items) if ((document.getElementById(id).closest("section") || document.getElementById(id)).getBoundingClientRect().top <= line) cur = id;
+      if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) cur = items[items.length - 1][0];
+      links.forEach((l) => {
+        const on = l.dataset.to === cur;
+        if (on && l.getAttribute("aria-current") !== "true") l.scrollIntoView({ block: "nearest", inline: "nearest" });
+        on ? l.setAttribute("aria-current", "true") : l.removeAttribute("aria-current");
+      });
+      nav.classList.toggle("stuck", nav.getBoundingClientRect().top <= 57);
+    };
+    addEventListener("scroll", spy, { passive: true }); addEventListener("resize", spy); spy();
+  };
+
   C.fail = (el, err) => {
     el.innerHTML = `<div class="card"><p>The data files didn't load (${C.esc(err.message)}).</p>
-      <p class="muted">The <span class="mono">data/</span> folder should sit next to this page. Rebuild it with <span class="mono">python scripts/build_site_data.py</span>.</p></div>`;
+      <p class="muted">The <code>data/</code> folder should sit next to this page. Rebuild it with <code>python scripts/build_site_data.py</code>.</p></div>`;
   };
 
   // read a CSS variable (charts use these so dark mode follows the theme)
@@ -247,5 +303,5 @@
   C.scale = (d0, d1, r0, r1) => (v) => r0 + ((v - d0) / (d1 - d0 || 1)) * (r1 - r0);
   C.niceMax = (v) => { const p = Math.pow(10, Math.floor(Math.log10(v))); return Math.ceil(v / p) * p; };
 
-  document.addEventListener("DOMContentLoaded", C.shell);
+  document.addEventListener("DOMContentLoaded", () => { C.shell(); C.toc(); });
 })();

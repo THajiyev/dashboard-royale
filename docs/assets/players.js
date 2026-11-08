@@ -126,7 +126,7 @@
   // Difference = actual − expected (same in payout or result terms); % is of the expected payout.
   const rowCells = (x) => {
     const diff = x.po - x.exp, pctd = x.exp > 0 ? diff / x.exp : null;
-    return `<td><span class="mono">${x.id}</span><span class="sub">${[x.region, x.age, x.tier].filter(Boolean).join(" · ")}</span></td>
+    return `<td><span class="mono">${x.id}</span><span class="sub">${[x.region, x.age, x.tier].filter(Boolean).join(", ")}</span></td>
       <td class="num">${C.usd(x.ci)}<span class="sub">${C.int(x.ses)} sessions</span></td>
       <td class="num">${C.usd(x.exp)}<span class="sub">${C.usd(x.po)} actual</span></td>
       <td class="num">${C.usd(x.exp - x.ci, { plus: true })}</td><td class="num">${C.usd(x.po - x.ci, { plus: true })}</td>
@@ -143,7 +143,7 @@
     $("#hitl-p").innerHTML = `Players whose share of paying spins is furthest from what their games promise. Flagged means it survives correction for testing every player.
       ${flagged.length ? `<strong style="color:var(--ink);font-weight:500">${m1158} of ${flagged.length} flagged ${flagged.length === 1 ? "player" : "players"} played mostly on M-1158</strong>, the machine whose meters already showed a payout mismatch.` : "No player is flagged in this period and group."}`;
     $("#hitl").innerHTML = `<thead><tr><th>Player</th><th class="num">Spins</th><th class="num">Paying spins</th><th class="num">Expected</th><th class="num">Win-rate z</th><th class="num">p</th><th class="num">q, corrected</th><th>Main machine</th><th>Check</th></tr></thead><tbody>
-      ${L.map((x) => `<tr class="${x.mach === "M-1158" ? "hl" : ""}"><td><span class="mono">${x.id}</span><span class="sub">${[x.region, x.age, x.tier].filter(Boolean).join(" · ")}</span></td>
+      ${L.map((x) => `<tr class="${x.mach === "M-1158" ? "hl" : ""}"><td><span class="mono">${x.id}</span><span class="sub">${[x.region, x.age, x.tier].filter(Boolean).join(", ")}</span></td>
         <td class="num">${C.int(x.n)}</td><td class="num">${C.int(x.pos)}<span class="sub">${C.pct(x.pos / x.n, 1)}</span></td>
         <td class="num">${C.int(x.epos)}<span class="sub">${C.pct(x.epos / x.n, 1)}</span></td>
         <td class="num">${C.num(x.hz, 1, true)}</td><td class="num">${pfmt(x.hp)}</td><td class="num">${x.hq < 0.001 ? "<0.001" : x.hq.toFixed(3)}</td>
@@ -188,7 +188,7 @@
     L = L.slice().sort((p, q) => sgn * (p[k] - q[k]));
     const per = 25, pages = Math.max(1, Math.ceil(L.length / per));
     S.page = Math.min(S.page, pages - 1);
-    $("#all-count").textContent = `${C.int(L.length)} players · page ${S.page + 1} of ${C.int(pages)}${S.seg !== "all" ? " · " + segLabel() : ""}`;
+    $("#all-count").textContent = `${C.int(L.length)} players, page ${S.page + 1} of ${C.int(pages)}${S.seg !== "all" ? ", " + segLabel() : ""}`;
     $("#all-prev").disabled = S.page === 0; $("#all-next").disabled = S.page >= pages - 1;
     $("#all").innerHTML = `<thead><tr>${HEAD}<th class="num">Win rate</th><th class="num">Win-rate z</th></tr></thead><tbody>${L.slice(S.page * per, S.page * per + per).map((x) => `<tr>${rowCells(x)}
       <td class="num">${C.pct(x.pos / x.n, 1)}<span class="sub">expected ${C.pct(x.epos / x.n, 1)}</span></td>

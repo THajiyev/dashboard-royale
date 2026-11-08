@@ -5,9 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gilded Ace Models</title>
 <meta name="description" content="How the forecast baseline was built, every model tested against it on a frozen time holdout, and how the intervals were made.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gilded Ace Models">
+<meta property="og:description" content="How the forecast baseline was built, every model tested against it on a frozen time holdout, and how the intervals were made.">
+<meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <script defer src="assets/core.js"></script>
 <script defer src="assets/models.js"></script>
@@ -63,7 +68,7 @@
 
   <div class="grid-2 section">
     <section aria-labelledby="it-h">
-      <h2 id="it-h">Five rounds of trying to beat it</h2>
+      <h2 id="it-h">Six rounds of trying to beat it</h2>
       <div class="card" style="margin-top:16px"><ol class="steps" id="iters"></ol></div>
     </section>
     <section aria-labelledby="floor-h">
@@ -71,7 +76,7 @@
       <p class="prose" style="margin:4px 0 16px">Ordinary-day RMSE of fits that were allowed to see the answers. If hindsight can only
         do this well, a forecast made weeks ahead has little left to gain without new information, such as hotel bookings.</p>
       <div class="card table-wrap" style="padding:8px 8px 4px"><table id="noise"></table></div>
-      <p class="note">Source: <span class="mono">analysis/experiments/iter5/noise_floor.csv</span></p>
+      <p class="note">Source: <code>analysis/experiments/iter5/noise_floor.csv</code></p>
     </section>
   </div>
 
@@ -89,14 +94,14 @@
         Knowing a machine's bank and game beats knowing its own history.</p>
       <div class="card table-wrap" style="padding:8px 8px 4px"><table id="mm"></table></div>
       <p class="note">Machine effects after location and game are small (spread τ ≈ 1.7%) and barely persist into May–Jun (Spearman 0.27).
-        None of the GM's bottom 10 has a credibly negative machine effect. Source: <span class="mono">analysis/models.md</span>, Phase 3.</p>
+        None of the GM's bottom 10 has a credibly negative machine effect. Source: <code>analysis/models.md</code>, Phase 3.</p>
     </section>
     <section aria-labelledby="iv-h">
       <h2 id="iv-h">Change-impact estimator, checked on fake changes</h2>
       <p class="prose" style="margin:4px 0 16px">Before reading any real result, 150 fake changes were planted at random units and dates,
         with no effect and with −15% or +10% injected. Intervals widened by ×1.25 (fit on one seed, confirmed on another).</p>
       <div class="card table-wrap" style="padding:8px 8px 4px"><table id="iv"></table></div>
-      <p class="note">A single machine's change has to be large to show: +10% is caught a third of the time. Source: <span class="mono">analysis/impact.md</span>.</p>
+      <p class="note">A single machine's change has to be large to show: +10% is caught a third of the time. Source: <code>analysis/impact.md</code>.</p>
     </section>
   </div>
 </main>

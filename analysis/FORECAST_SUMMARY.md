@@ -80,6 +80,9 @@
 These were scored on MAE only, all in `outputs/model_leaderboard_forecast.csv`:
 - **Phase 2:** OLS, ETS, SARIMAX, structural, LightGBM, Bayesian ridge, ensemble.
 - **Iteration 2:** about 30 variants, including AutoARIMA, AutoETS, Theta, MSTL, Prophet, XGBoost and CatBoost (direct), bottom-up by zone, and combinations.
+- **Iteration 6:** EL × a recent-demand factor, 128 variants: 7/14/28-day means, EMAs and weekday-specific recent levels, four ways of handling event days, and strengths of 25–100%.
+  - With one forecast on Apr 30, every variant lost to EL. The CV pick was +20% RMSE, because the factor pointed up after a strong April just before demand fell.
+  - With weekly refresh, the best variant is the 28-day anchor already in EL2A. It was not adopted (`experiments/iter6/README.md`).
 
 None beat EL in a way we could trust. Averaging EL with EL2A was also checked: it lost in Jan–Apr validation.
 
@@ -92,5 +95,5 @@ None beat EL in a way we could trust. Averaging EL with EL2A was also checked: i
 
 **Details:**
 - `models.md`: the full write-up. Iteration 1 is covered there; its code is in `experiments/ds_alpha/`.
-- `experiments/iter2`–`iter5/README.md`: one per iteration.
+- `experiments/iter2`–`iter6/README.md`: one per iteration.
 - `experiments/iter5/table_vs_b1.csv`: the table above.

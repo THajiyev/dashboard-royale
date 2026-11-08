@@ -247,3 +247,27 @@ Full write-up: `analysis/experiments/iter4/README.md`.
 - **Holiday features** (holiday day, long weekend, within 1–3 days, exp(−|d|/τ) closeness, before/on/after bins, GBM): fitted effects are all within ±1.4%, and holdout MAE moves by at most ±1.2%, none significant. On the holdout's holiday windows the base already errs less than on an average day.
 - **Prior-year patterns** from LVCVA 2023–24 monthly visitors (`iter4/lvcva_history.csv`): the seasonal shape won fixed-protocol CV (+3%) but lost the holdout by 12%. 2023–24 had no June dip, and 2025's decline is a year-specific slowdown. Carrying the latest *published* YoY change forward helps slightly (+1.0% theo, +1.5% coin-in, DM p = 0.23).
 - **EL2 + 28-day anchor, refreshed weekly** stays the recommended forecast.
+
+## Iteration 6 — recent-demand adjustment on top of EL (not adopted)
+
+Full write-up: `analysis/experiments/iter6/README.md`. The design was pre-registered in
+`analysis/experiments/iter6/PREREG.md`, and May–Jun was scored once.
+
+- **What was tried:** 128 variants of EL × (1 + w·(R − 1)), under both the fixed and the weekly-refresh protocol.
+  - R is recent actual theo ÷ EL's own fit, measured by a 7/14/28-day mean, an EMA (half-life 7/14/28 days) or a
+    weekday-specific 28/56-day mean.
+  - Event days are dropped, dropped along with the closure, de-lifted, or left in raw.
+  - The strength w is 25%, 50%, 75% or 100%.
+  - EL itself is unchanged.
+- **Fixed protocol:** all 128 variants lost to EL on May–Jun. The Jan–Apr CV pick was +20% RMSE (CI +12% to +28%).
+  - On Apr 30 the factor pointed up 1–2%, because April was strong. May–Jun then fell.
+  - Jan–Apr CV favoured level-tracking because the level was rising, the same reversal iteration 2 found.
+- **Refresh protocol:** the CV pick (28-day mean, event days de-lifted, 100%) beat refreshed EL by 7.7%, but the CI
+  (−18% to +4.5%) includes zero.
+  - It was worse in May and better in June.
+  - It is essentially iteration 3's anchor, already in EL2A.
+- **Event handling matters:**
+  - Leaving event days in raw won Jan–Apr CV only because event spikes cancelled EL's under-forecast while the level
+    was rising.
+  - It was the worst mode on May–Jun.
+- **Recommendation:** don't integrate. **EL** stays the headline forecast and **EL2A** the weekly-refresh model.

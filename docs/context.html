@@ -5,9 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gilded Ace Context</title>
 <meta name="description" content="Access, events, weather and city trends: what else moved play at The Gilded Ace, and which data we left out of the models.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gilded Ace Context">
+<meta property="og:description" content="Access, events, weather and city trends: what else moved play at The Gilded Ace, and which data we left out of the models.">
+<meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <script defer src="assets/core.js"></script>
 <script defer src="assets/context.js"></script>
@@ -39,7 +44,7 @@
     <svg class="chart" id="closure" height="300" role="img" aria-label="Weekly effect of the walkway closure on Back Forty relative to control zones"></svg>
     <p class="note">Placebo zones, each treated as if closed, moved between −2% and +3%. The whole floor, measured directly, was
       <span class="mono">+1.6%</span> (90% CI <span class="mono">−0.2%</span> to <span class="mono">+3.4%</span>): players walked to other zones instead of leaving.
-      Access decides where people play more than whether they play. Source: <span class="mono">outputs/model_closure_event_study.csv</span>.</p>
+      Access decides where people play more than whether they play. Source: <code>outputs/model_closure_event_study.csv</code>.</p>
   </section>
 
   <div class="grid-2 section">
@@ -57,7 +62,7 @@
       <div class="card table-wrap" style="padding:8px 8px 4px"><table id="weff"></table></div>
       <p class="note">The rain effect passed a placebo test: 4 random days never came close (p &lt; 0.001), and it shows in both rain episodes, Feb 13 and May 4–6.
         All nine 40°C days fall in June's tourism slump, so heat can't be separated from it. Even a perfect weather forecast would have cut the May–Jun error by about 5%.
-        Weather belongs on the dashboard as an alert, not in the forecast. Source: <span class="mono">analysis/WEATHER_NOTE.md</span>.</p>
+        Weather belongs on the dashboard as an alert, not in the forecast. Source: <code>analysis/WEATHER_NOTE.md</code>.</p>
     </section>
   </div>
 
@@ -77,7 +82,7 @@
     </section>
     <section aria-labelledby="out-h">
       <h2 id="out-h">What we left out, and why</h2>
-      <div class="card" style="margin-top:16px"><ol class="steps" id="out"></ol></div>
+      <div class="card" style="margin-top:16px"><ul class="steps" id="out"></ul></div>
     </section>
   </div>
 </main>

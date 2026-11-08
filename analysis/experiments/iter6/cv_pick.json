@@ -1,0 +1,78 @@
+{
+  "fixed": {
+    "protocol": "fixed",
+    "pick": "EL x ema hl28d [raw] w=50%",
+    "cv_rmse": 4766.35284546603,
+    "cv_rmse_EL": 5192.393773220021,
+    "cv_gain_vs_EL": 0.082050966540965,
+    "folds_won": 7,
+    "folds": 7,
+    "early_pick": "EL x ema hl28d [raw] w=50%",
+    "early_pick_late_rmse": 4646.532750279929,
+    "EL_late_rmse": 5273.701478397909,
+    "checks": {
+      "a_size_ge_3pct": true,
+      "b_folds_won": true,
+      "c_ex_closure_beats_EL": true,
+      "d_early_pick_beats_EL_late": true
+    },
+    "adopt_in_principle": true
+  },
+  "fixed_clean": {
+    "protocol": "fixed",
+    "pick": "EL x mean14d [excl] w=100%",
+    "cv_rmse": 4892.023282075501,
+    "cv_rmse_EL": 5192.393773220021,
+    "cv_gain_vs_EL": 0.05784817258923869,
+    "folds_won": 7,
+    "folds": 7,
+    "early_pick": "EL x mean14d [excl] w=100%",
+    "early_pick_late_rmse": 4854.440162866064,
+    "EL_late_rmse": 5273.701478397909,
+    "checks": {
+      "a_size_ge_3pct": true,
+      "b_folds_won": true,
+      "c_ex_closure_beats_EL": true,
+      "d_early_pick_beats_EL_late": true
+    },
+    "adopt_in_principle": true
+  },
+  "refresh": {
+    "protocol": "refresh",
+    "pick": "EL x mean28d [raw] w=50%",
+    "cv_rmse": 5968.8868317719,
+    "cv_rmse_EL": 6190.281779732554,
+    "cv_gain_vs_EL": 0.03576492247663399,
+    "folds_won": 9,
+    "folds": 13,
+    "early_pick": "EL x ema hl7d [raw] w=50%",
+    "early_pick_late_rmse": 5145.057970198544,
+    "EL_late_rmse": 5114.919370814556,
+    "checks": {
+      "a_size_ge_3pct": true,
+      "b_folds_won": true,
+      "c_ex_closure_beats_EL": true,
+      "d_early_pick_beats_EL_late": false
+    },
+    "adopt_in_principle": false
+  },
+  "refresh_clean": {
+    "protocol": "refresh",
+    "pick": "EL x mean28d [delift] w=100%",
+    "cv_rmse": 5981.655700045354,
+    "cv_rmse_EL": 6190.281779732554,
+    "cv_gain_vs_EL": 0.03370219436056332,
+    "folds_won": 10,
+    "folds": 13,
+    "early_pick": "EL x mean28d [delift] w=100%",
+    "early_pick_late_rmse": 4767.047073751199,
+    "EL_late_rmse": 5114.919370814556,
+    "checks": {
+      "a_size_ge_3pct": true,
+      "b_folds_won": true,
+      "c_ex_closure_beats_EL": true,
+      "d_early_pick_beats_EL_late": true
+    },
+    "adopt_in_principle": true
+  }
+}

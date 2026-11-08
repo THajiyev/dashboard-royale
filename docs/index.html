@@ -5,9 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gilded Ace Floor</title>
 <meta name="description" content="Floor plan of The Gilded Ace, shaded by play, expected revenue, luck or traffic, with a move simulator.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gilded Ace Floor">
+<meta property="og:description" content="Floor plan of The Gilded Ace, shaded by play, expected revenue, luck or traffic, with a move simulator.">
+<meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <script defer src="assets/core.js"></script>
 <script defer src="assets/floor.js"></script>
@@ -39,6 +44,15 @@
           <button type="button" data-m="traffic">Traffic</button>
         </div>
       </div>
+      <div class="move-bar" id="move-bar">
+        <div class="mb-count" id="mb-count" aria-live="polite"></div>
+        <div class="mb-actions">
+          <button class="btn" type="button" id="mb-undo" disabled>Undo</button>
+          <button class="btn" type="button" id="mb-redo" disabled>Redo</button>
+          <button class="btn" type="button" id="mb-reset" disabled>Reset</button>
+          <button class="btn primary" type="button" data-optimize="scroll">Find the best moves</button>
+        </div>
+      </div>
       <div class="floor-wrap"><svg id="floor" role="img" aria-label="Floor plan of the casino, machines shaded by the chosen measure"></svg></div>
       <div class="floor-foot">
         <div id="scale" class="scale"></div>
@@ -59,6 +73,29 @@
       <div id="plan"></div>
     </aside>
   </div>
+
+  <section class="section" aria-labelledby="stop-h">
+    <h2 id="stop-h">When to stop moving machines</h2>
+    <p>The optimizer adds moves one step at a time, best value per machine first, using the same projection as dragging.
+      A step is a machine into an empty slot or a swap of two. Each extra move is worth making only while it earns back its price over July's 28 days. The catalogue allows at most 24 machine moves.</p>
+    <div class="stop-controls">
+      <label class="field" for="move-price">Price per move <span class="money">$<input id="move-price" type="number" min="0" step="100" inputmode="numeric"></span></label>
+      <button class="btn primary" type="button" id="stop-apply">Put the plan on the floor</button>
+    </div>
+    <p class="stop-answer" id="stop-answer" aria-live="polite"></p>
+    <div class="grid-2">
+      <div class="card">
+        <h3 class="chart-h">What each extra move adds</h3>
+        <p class="small muted" style="margin:2px 0 12px">Theo over July per machine moved. Bars above the price line pay for themselves.</p>
+        <svg class="chart" id="stop-bars" height="240" role="img" aria-label="Theo added per machine moved at each step of the optimized plan, against the price of a move"></svg>
+      </div>
+      <div class="card">
+        <h3 class="chart-h">Net over July after move costs</h3>
+        <p class="small muted" style="margin:2px 0 12px">Projected theo minus what the moves cost, with the 90% model range. The cross is the plan on the floor now.</p>
+        <svg class="chart" id="stop-net" height="240" role="img" aria-label="Net gain over July by number of machines moved, with the best stopping point marked"></svg>
+      </div>
+    </div>
+  </section>
 
   <section class="section" aria-labelledby="zones-h">
     <h2 id="zones-h">Zones</h2>

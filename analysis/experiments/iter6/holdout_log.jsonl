@@ -1,0 +1,1 @@
+{"time": "2026-11-07T22:06:41", "n_models": 130, "protocols": ["fixed", "refresh"], "picks": {"fixed": "EL x ema hl28d [raw] w=50%", "fixed_clean": "EL x mean14d [excl] w=100%", "refresh": "EL x mean28d [raw] w=50%", "refresh_clean": "EL x mean28d [delift] w=100%"}}

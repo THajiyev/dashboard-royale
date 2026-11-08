@@ -32,7 +32,7 @@
 
   function drawPrice() {
     if (!D) return;
-    const svg = $("#price"), W = svg.clientWidth || 900, H = 300, P = { l: 40, r: 80, t: 16, b: 28 };
+    const svg = $("#price"), W = svg.clientWidth || 900, H = 300, P = { l: 40, r: W >= 560 ? 80 : 12, t: 16, b: 28 };
     const ms = ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06"];
     const days = D.daily.filter((r) => { const i = ms.indexOf(r.d.slice(0, 7)); return i >= S.a && i <= S.b; });
     const x = C.scale(0, Math.max(1, days.length - 1), P.l, W - P.r), y = C.scale(0, 16, H - P.b, P.t);
@@ -41,14 +41,14 @@
     days.forEach((r, i) => { if (r.d.endsWith("-01")) g += `<text x="${x(i)}" y="${H - 8}">${C.date(r.d, { month: "short" })}</text>`; });
     const ci = days.findIndex((r) => r.d === "2025-05-01");
     if (ci > 0) g += `<line x1="${x(ci) - (x(1) - x(0)) / 2}" x2="${x(ci) - (x(1) - x(0)) / 2}" y1="${P.t}" y2="${H - P.b}" stroke="var(--ink-3)" stroke-dasharray="3 3"/>
-      <text x="${x(ci) + 6}" y="${P.t + 10}" style="fill:var(--ink-2)">May 1: −53% at every tier</text>`;
+      <text x="${x(ci) + 6}" y="${P.t + 10}" style="fill:var(--ink-2)">${W < 560 ? "May 1: −53%" : "May 1: −53% at every tier"}</text>`;
     for (const tr of D.tiers) {
       const pts = days.map((r, i) => (r[tr] == null ? null : [x(i), y(r[tr])]));
       let d = "", pen = false;
       pts.forEach((p) => { if (!p) { pen = false; return; } d += `${pen ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`; pen = true; });
       g += `<path d="${d}" fill="none" stroke="var(${COL[tr]})" stroke-width="2" stroke-linejoin="round"/>`;
       const lastP = [...pts].reverse().find(Boolean);
-      if (lastP) g += `<text x="${lastP[0] + 8}" y="${lastP[1] + 4}" style="fill:var(--ink)">${tr}</text>`;
+      if (lastP && W >= 560) g += `<text x="${lastP[0] + 8}" y="${lastP[1] + 4}" style="fill:var(--ink)">${tr}</text>`;
     }
     g += `<line id="pr-x" y1="${P.t}" y2="${H - P.b}" stroke="var(--ink-3)" opacity="0"/>`;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = g;

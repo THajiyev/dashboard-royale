@@ -10,8 +10,11 @@ No server, build step or Python is needed to view it.
 | `players.html` Players | Tracked wagers, payback and net by guest group; loss concentration; each player's expected vs actual payout ($, %), payout z ranked against peers, and an exact win-rate test |
 | `comps.html` Comps | Comp cost and reinvestment, the May 1 points-price cut by tier, tier growth, unspent points, and the pilot that would test it |
 | `forecast.html` Forecast | Jan–Jun daily theo, frozen May–Jun forecasts with EL's 90% band, the July no-action yardstick |
+| `weekly.html` Weekly | The seven-day cycle: calendar heatmap, stacked week profiles, autocorrelation, periodogram, Tukey pairwise tests, month-profile correlations, locals vs visitors, week-total trend, and a table of every test with its p-value |
 | `models.html` Models | How B1 was built, every model vs B1 with bootstrap CIs, iterations, machine and impact-model checks |
+| `correlations.html` Correlations | Correlation matrices with Benjamini–Hochberg q-values: daily floor metrics (raw and weekday-removed), machine persistence, player persistence, forecast errors |
 | `context.html` Context | Walkway closure, weather and rain, measured events, LVCVA visitation, data left out |
+| `streaks.html` Streaks | Whether any player is "due": next-visit results by streak against shuffled order, half-against-half luck, swing size, the house edge |
 | `actions.html` Actions | The $100,000 builder with cost, effect, uncertainty, measurement and evidence per action |
 
 The period selector (From/To) is shared across pages and kept in the URL. Moves placed on the Floor page are saved in the browser and appear on the Actions page.
@@ -20,6 +23,7 @@ The period selector (From/To) is shared across pages and kept in the URL. Moves 
 
 `data/*.js` holds the precomputed results. Each file sets `window.__DATA[name]`, which is why the pages work straight from disk.
 They are generated from the analysis outputs by `scripts/build_site_data.py` (outside this folder), only when the analysis changes.
+`data/weekly.js` and `data/corr.js` come from `scripts/build_site_patterns.py`.
 
 ## Publish
 

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Correlations</title>
+<meta name="description" content="Correlation matrices for daily floor metrics, machines, players and forecast errors, with Benjamini–Hochberg corrected p-values.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gilded Ace Correlations">
+<meta property="og:description" content="Correlation matrices for daily floor metrics, machines, players and forecast errors, with Benjamini–Hochberg corrected p-values.">
+<meta name="theme-color" content="#f7f7f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141415" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/charts.js"></script>
+<script defer src="assets/correlations.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1>What moves together</h1>
+      <p>Four correlation matrices, each answering a question the other pages depend on. Blue is positive and red negative.
+        A grey cell isn't significant once every pair in its matrix is corrected for multiple testing (Benjamini–Hochberg,
+        q ≥ 0.05). Hover a cell for r, p, q and n.</p>
+    </div>
+  </div>
+  <div class="legend" style="margin:-8px 0 24px;align-items:center" id="key"></div>
+
+  <section class="section" style="margin-top:0" aria-labelledby="day-h">
+    <h2 id="day-h">Daily floor metrics</h2>
+    <p>One row per gaming day, Jan–Jun. Raw daily numbers all rise and fall with the weekday cycle, so they mostly re-measure
+      the calendar. Removing the weekday and the slow level leaves what actually co-moves from one day to the next.</p>
+    <div class="grid-3-1" style="margin-top:16px">
+      <div class="card">
+        <div class="card-head" style="margin-bottom:8px">
+          <div><p class="muted small" id="day-meta"></p></div>
+          <div class="seg" role="group" aria-label="Correlation of" id="day-mode">
+            <button type="button" data-m="resid" aria-pressed="true">Weekday and trend removed</button>
+            <button type="button" data-m="raw" aria-pressed="false">Raw daily values</button>
+          </div>
+        </div>
+        <div class="matrix-wrap"><svg class="chart" id="day" role="img" aria-label="Correlation matrix of daily floor metrics"></svg></div>
+      </div>
+      <aside class="card" aria-label="What the daily matrix says"><h2 style="margin:0 0 12px">What it says</h2><ul class="says" id="day-says"></ul></aside>
+    </div>
+    <div class="card table-wrap" style="padding:8px 8px 4px;margin-top:16px"><table id="day-top"></table></div>
+  </section>
+
+  <section class="section" aria-labelledby="mac-h">
+    <h2 id="mac-h">Machines: what persists from Jan–Apr to May–Jun</h2>
+    <p>One row per machine on the floor in both periods. Spearman rank correlation. This is the test behind the Machines page:
+      a cut should follow what persists, not what was luck.</p>
+    <div class="grid-3-1" style="margin-top:16px">
+      <div class="card">
+        <p class="muted small" id="mac-meta" style="margin:0 0 8px"></p>
+        <div class="matrix-wrap"><svg class="chart" id="mac" role="img" aria-label="Correlation matrix of machine metrics in two periods"></svg></div>
+      </div>
+      <aside class="card" aria-label="What the machine matrix says"><h2 style="margin:0 0 12px">What it says</h2><ul class="says" id="mac-says"></ul></aside>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="ply-h">
+    <h2 id="ply-h">Carded players: habits persist, luck doesn't</h2>
+    <p>One row per carded player seen in both Jan–Mar and Apr–Jun. Spearman rank correlation. Luck is the player's result
+      minus theo, divided by theo: positive means they won more than the game math expected.</p>
+    <div class="grid-3-1" style="margin-top:16px">
+      <div class="card">
+        <p class="muted small" id="ply-meta" style="margin:0 0 8px"></p>
+        <div class="matrix-wrap"><svg class="chart" id="ply" role="img" aria-label="Correlation matrix of player metrics"></svg></div>
+      </div>
+      <aside class="card" aria-label="What the player matrix says"><h2 style="margin:0 0 12px">What it says</h2><ul class="says" id="ply-says"></ul></aside>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="err-h">
+    <h2 id="err-h">Forecast errors: why combining models didn't help</h2>
+    <p>Daily errors (forecast minus actual) on May 1 – Jun 30 for the main models from the Models page. Averaging forecasts only
+      helps when their errors disagree.</p>
+    <div class="grid-3-1" style="margin-top:16px">
+      <div class="card">
+        <p class="muted small" id="err-meta" style="margin:0 0 8px"></p>
+        <div class="matrix-wrap"><svg class="chart" id="err" role="img" aria-label="Correlation matrix of daily forecast errors"></svg></div>
+      </div>
+      <aside class="card" aria-label="What the error matrix says"><h2 style="margin:0 0 12px">What it says</h2><ul class="says" id="err-says"></ul></aside>
+    </div>
+    <div class="card table-wrap" style="padding:8px 8px 4px;margin-top:16px"><table id="err-tab"></table></div>
+  </section>
+
+  <section class="section" aria-labelledby="meth-h">
+    <h2 id="meth-h">How these were computed</h2>
+    <ul class="says prose" style="margin-top:12px">
+      <li><b>Daily, weekday and trend removed:</b> ordinary days only. Money and count measures are logged; each loses its
+        weekday mean, then a centred 15-day rolling median. Temperature is taken against its own 15-day mean (hotter than recent
+        days); rain is left in millimetres. This is the same recipe as the weather check (<span class="mono">WEATHER_NOTE.md</span>).</li>
+      <li><b>Machines and players:</b> Spearman rank correlation, because money per machine and per player is heavily skewed.
+        Luck z is a machine's house win minus theo over its own game-math standard deviation.</li>
+      <li><b>p and q:</b> q is the Benjamini–Hochberg false-discovery-rate correction over every pair in that matrix. Daily series
+        are autocorrelated, so their p-values are optimistic; read them as rankings of evidence, not exact error rates.</li>
+      <li><b>Correlation isn't cause.</b> The player matrix shows a case where a strong raw correlation disappears once play
+        volume is held fixed.</li>
+    </ul>
+    <p class="note">Source: <span class="mono">scripts/build_site_patterns.py</span>.</p>
+  </section>
+</main>
+</body>
+</html>

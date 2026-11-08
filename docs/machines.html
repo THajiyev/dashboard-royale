@@ -5,9 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gilded Ace Machines</title>
 <meta name="description" content="Every machine ranked by luck: house win against theo, with a payout check and the GM's bottom 10 re-examined.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gilded Ace Machines">
+<meta property="og:description" content="Every machine ranked by luck: house win against theo, with a payout check and the GM's bottom 10 re-examined.">
+<meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <script defer src="assets/core.js"></script>
 <script defer src="assets/machines.js"></script>
@@ -26,15 +31,6 @@
 
   <section class="stats" id="stats" aria-label="Luck summary"></section>
 
-  <section class="section" style="margin-top:0;margin-bottom:24px" aria-labelledby="flags-h">
-    <h2 id="flags-h">Flagged machines</h2>
-    <p><span class="tag"><span class="dot lead"></span>Flagged</span>: payout rate off its configuration, or luck beyond chance, after correcting for
-      testing every machine. <span class="tag"><span class="dot watch"></span>Watch</span>: luck outside the 99% range, a monthly drift alarm,
-      or carded players flagged for win rate who played mostly on it. Across 310 fair machines about four drift alarms happen
-      by chance, so most watch entries are noise worth a second look next month. A flag is a reason to inspect, not proof of anything.</p>
-    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="flags"></table></div>
-  </section>
-
   <section class="card" aria-labelledby="cat-h">
     <div class="card-head">
       <div>
@@ -51,6 +47,15 @@
     <svg class="chart" id="cat" height="300" role="img" aria-label="Dot plot of luck z for every machine, sorted"></svg>
   </section>
 
+  <section class="section" aria-labelledby="flags-h">
+    <h2 id="flags-h">Flagged machines</h2>
+    <p><span class="tag"><span class="dot lead"></span>Flagged</span>: payout rate off its configuration, or luck beyond chance, after correcting for
+      testing every machine. <span class="tag"><span class="dot watch"></span>Watch</span>: luck outside the 99% range, a monthly drift alarm,
+      or carded players flagged for win rate who played mostly on it. Across 310 fair machines about four drift alarms happen
+      by chance, so most watch entries are noise worth a second look next month. A flag is a reason to inspect, not proof of anything.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="flags"></table></div>
+  </section>
+
   <section class="section" aria-labelledby="b10-h">
     <h2 id="b10-h">The GM's bottom 10, re-examined</h2>
     <p>The ten lowest house wins, Jan–Jun. The verdicts combine luck, the payout check, location and game
@@ -63,7 +68,7 @@
     <p>Hold band: the grey bar is where a fair machine's hold lands 99% of the time, the tick is its configured hold,
       the dot is what it held. A red dot sits outside the band.</p>
     <div class="controls" style="margin-bottom:12px">
-      <input type="search" id="q" placeholder="Machine or game" aria-label="Find a machine or game">
+      <label class="field search">Find <input type="search" id="q" placeholder="Machine or game"></label>
       <label class="field">Zone <select id="zone" aria-label="Zone"><option value="">All zones</option></select></label>
       <div class="seg" role="group" aria-label="Order" id="order">
         <button type="button" data-o="best">Luckiest first</button>
