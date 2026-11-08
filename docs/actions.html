@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Actions</title>
+<meta name="description" content="The $100,000 plan for July 2025: up to three priced actions, each with its expected effect, uncertainty, measurement plan and evidence.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/actions.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1>The $100,000 plan for July</h1>
+      <p>Replacing the bottom 10 wouldn't fix what makes them low: the spot, the game and, for one machine, its payouts.
+        This draft funds the fixes the evidence supports and keeps the rest. Change quantities below; moves come from the floor plan.</p>
+    </div>
+    <div class="controls"><button class="btn" type="button" id="reset">Restore the draft plan</button></div>
+  </div>
+
+  <section class="stats" id="stats" aria-label="Budget summary"></section>
+
+  <div class="grid-main">
+    <section aria-labelledby="plan-h">
+      <h2 id="plan-h">Funded actions</h2>
+      <p class="prose" style="margin:4px 0 0">Costs follow the catalogue: quantity × (unit cost + daily cost × days left after the lead time). Effects count only the days after the lead time.</p>
+      <div id="cards"></div>
+    </section>
+    <aside class="card panel" aria-labelledby="cat-h">
+      <h3 id="cat-h">Action catalogue</h3>
+      <p class="muted" style="margin:4px 0 12px">Up to 3 action types. Keeping money doesn't use a slot.</p>
+      <div class="actions-list" id="catalog"></div>
+    </aside>
+  </div>
+
+  <section class="section" aria-labelledby="no-h">
+    <h2 id="no-h">Considered and not funded</h2>
+    <div class="card table-wrap" style="padding:8px 8px 4px;margin-top:16px"><table id="no"></table></div>
+  </section>
+</main>
+</body>
+</html>

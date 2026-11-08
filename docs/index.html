@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Floor</title>
+<meta name="description" content="Floor plan of The Gilded Ace, shaded by play, expected revenue, luck or traffic, with a move simulator.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/floor.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1 id="title">Floor plan</h1>
+      <p>The GM's ten lowest earners are outlined. Nine of them sit in Back Forty, the zone furthest from the entrances.
+        Shade the floor by play, expected revenue, luck or traffic, and drag a machine to another slot to project the move.</p>
+    </div>
+    <div class="controls" id="period"></div>
+  </div>
+
+  <section class="stats" id="stats" aria-label="Floor summary"></section>
+
+  <div class="grid-main">
+    <section class="card" aria-labelledby="floor-h">
+      <div class="card-head">
+        <div>
+          <h2 id="floor-h">Floor as of Jun 30</h2>
+          <p id="metric-desc"></p>
+        </div>
+        <div class="seg" role="group" aria-label="Shade the floor by" id="metric">
+          <button type="button" data-m="play">Play</button>
+          <button type="button" data-m="rev">Revenue</button>
+          <button type="button" data-m="luck">Luck</button>
+          <button type="button" data-m="traffic">Traffic</button>
+        </div>
+      </div>
+      <div class="floor-wrap"><svg id="floor" role="img" aria-label="Floor plan of the casino, machines shaded by the chosen measure"></svg></div>
+      <div class="floor-foot">
+        <div id="scale" class="scale"></div>
+        <div class="legend">
+          <span><i class="box" style="background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink)"></i>GM's bottom 10</span>
+          <span><i class="box" style="background:var(--empty-slot)"></i>Empty slot</span>
+          <span><svg width="12" height="10" aria-hidden="true"><path d="M0 10L6 0L12 10z" fill="var(--ink-2)"/></svg>Entrance</span>
+          <span><svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="var(--neg)"/></svg>Flagged</span>
+          <span><svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--neg)" stroke-width="1.5"/></svg>Watch</span>
+          <span><i style="background:var(--neg)"></i>Walkway closed Mar 3 – Apr 6</span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card panel" aria-label="Selected machine and move plan">
+      <div id="detail"></div>
+      <hr>
+      <div id="plan"></div>
+    </aside>
+  </div>
+
+  <section class="section" aria-labelledby="zones-h">
+    <h2 id="zones-h">Zones</h2>
+    <p>Per available hour, so downtime and short stays don't count as weak play. Select a zone to highlight it on the plan.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="zones"></table></div>
+  </section>
+</main>
+</body>
+</html>

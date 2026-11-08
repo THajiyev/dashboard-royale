@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Forecast</title>
+<meta name="description" content="Daily theo for The Gilded Ace: actuals, the frozen May–June forecast against the weekday baseline, and the July yardstick.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/forecast.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1 id="title">Daily theo forecast</h1>
+      <p>Models learned from Jan 1 – Apr 30 and were frozen before May. The event-type lift model (EL) was picked in advance;
+        here it is against the weekday baseline (B1) on the 61 days neither had seen.</p>
+    </div>
+    <div class="controls" id="period"></div>
+  </div>
+
+  <section class="stats" id="stats" aria-label="Forecast summary"></section>
+
+  <section class="card" aria-labelledby="fc-h">
+    <div class="card-head">
+      <div>
+        <h2 id="fc-h">Floor theo per gaming day</h2>
+        <p>Theo is the expected house win for what was played, so it tracks demand without slot luck.</p>
+      </div>
+      <div class="pill-row" id="series" role="group" aria-label="Forecasts to show"></div>
+    </div>
+    <svg class="chart" id="fc" height="340" role="img" aria-label="Line chart of daily theo with forecasts for May and June"></svg>
+    <div class="legend" style="margin-top:12px" id="fc-legend"></div>
+  </section>
+
+  <div class="grid-2 section">
+    <section aria-labelledby="jul-h">
+      <h2 id="jul-h">July with no action</h2>
+      <p class="prose" style="margin:4px 0 16px">The yardstick any action is measured against: a model refit on Jan–Jun with a Jul 4 holiday term,
+        scaled to June's softer level (×<span class="mono" id="lvl"></span>). An action has to move daily theo by more than the
+        detectable effect to show up against it.</p>
+      <div class="card table-wrap" style="padding:8px 8px 4px"><table id="jul"></table></div>
+    </section>
+    <section aria-labelledby="seg-h">
+      <h2 id="seg-h">Where June's shortfall came from</h2>
+      <p class="prose" style="margin:4px 0 16px">Every model over-forecast June. Locals dipped a little; visitors fell further, in a month when
+        Las Vegas visitation ran below 2024. Ordinary (non-event) days, theo per day.</p>
+      <div class="card table-wrap" style="padding:8px 8px 4px"><table id="seg"></table></div>
+    </section>
+  </div>
+
+  <section class="section" aria-labelledby="meas-h">
+    <h2 id="meas-h">How a July action would be measured</h2>
+    <p>80% power at a 5% test level over 30 days. The detectable effect is the smallest change the comparison can tell apart from noise.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="meas"></table></div>
+  </section>
+</main>
+</body>
+</html>

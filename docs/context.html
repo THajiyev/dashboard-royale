@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Context</title>
+<meta name="description" content="Access, events, weather and city trends: what else moved play at The Gilded Ace, and which data we left out of the models.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/context.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1>What else moves play</h1>
+      <p>The competing explanations we tested: access, events, weather and the city's own tourism trend.
+        Access and events change where and how much people play. Weather mostly doesn't, apart from rain keeping locals home.</p>
+    </div>
+  </div>
+
+  <section class="stats" id="stats" aria-label="Context summary"></section>
+
+  <section class="card" aria-labelledby="cl-h">
+    <div class="card-head">
+      <div>
+        <h2 id="cl-h">Back Forty lost its front door for five weeks</h2>
+        <p>The walkway from the main entrance closed for renovation Mar 3 – Apr 6. Weekly gap between Back Forty and five control zones,
+          coin-in per hour, with 90% intervals. Week 0 is the closure.</p>
+      </div>
+      <div class="legend">
+        <span><i class="box" style="background:var(--event);box-shadow:inset 0 0 0 1px var(--line)"></i>Walkway closed</span>
+        <span><i class="box" style="background:var(--band)"></i>90% interval</span>
+      </div>
+    </div>
+    <svg class="chart" id="closure" height="300" role="img" aria-label="Weekly effect of the walkway closure on Back Forty relative to control zones"></svg>
+    <p class="note">Placebo zones, each treated as if closed, moved between −2% and +3%. The whole floor, measured directly, was
+      <span class="mono">+1.6%</span> (90% CI <span class="mono">−0.2%</span> to <span class="mono">+3.4%</span>): players walked to other zones instead of leaving.
+      Access decides where people play more than whether they play. Source: <span class="mono">outputs/model_closure_event_study.csv</span>.</p>
+  </section>
+
+  <div class="grid-2 section">
+    <section aria-labelledby="w-h">
+      <h2 id="w-h">Rain keeps locals home; ordinary heat doesn't matter</h2>
+      <p class="prose" style="margin:4px 0 16px">Daily high and rain at the Las Vegas airport (NOAA, real data). Marked days had more than 1 mm of rain.</p>
+      <div class="card"><svg class="chart" id="wx" height="220" role="img" aria-label="Daily high temperature and rainfall, January to June 2025"></svg>
+        <div class="legend" style="margin-top:8px"><span><i style="background:var(--ink-3)"></i>Daily high, °C</span><span><i class="box" style="background:var(--div-pos)"></i>Rain, mm</span><span><i class="box" style="background:var(--div-neg);opacity:.5"></i>40°C or hotter</span></div>
+      </div>
+    </section>
+    <section aria-labelledby="we-h">
+      <h2 id="we-h">Effect on play, after weekday and fortnight</h2>
+      <p class="prose" style="margin:4px 0 16px">Play is measured against what is normal for that weekday and that fortnight, so seasons
+        aren't mistaken for weather. 148 ordinary days, Newey–West errors.</p>
+      <div class="card table-wrap" style="padding:8px 8px 4px"><table id="weff"></table></div>
+      <p class="note">The rain effect passed a placebo test: 4 random days never came close (p &lt; 0.001), and it shows in both rain episodes, Feb 13 and May 4–6.
+        All nine 40°C days fall in June's tourism slump, so heat can't be separated from it. Even a perfect weather forecast would have cut the May–Jun error by about 5%.
+        Weather belongs on the dashboard as an alert, not in the forecast. Source: <span class="mono">analysis/WEATHER_NOTE.md</span>.</p>
+    </section>
+  </div>
+
+  <section class="section" aria-labelledby="ev-h">
+    <h2 id="ev-h">Changes and events, measured</h2>
+    <p>Theo per day against a counterfactual, with 90% intervals from placebo tests. Net includes spillover onto other machines and zones.
+      Inconclusive means the interval spans zero.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="ev"></table></div>
+  </section>
+
+  <div class="grid-2 section">
+    <section aria-labelledby="city-h">
+      <h2 id="city-h">Las Vegas visitation, 2025</h2>
+      <p class="prose" style="margin:4px 0 16px">LVCVA's revised monthly series (real data). It tells the June story, visitation down on a year
+        earlier, but it was published after the fact, so it can't feed a forecast made in 2025.</p>
+      <div class="card table-wrap" style="padding:8px 8px 4px"><table id="city"></table></div>
+    </section>
+    <section aria-labelledby="out-h">
+      <h2 id="out-h">What we left out, and why</h2>
+      <div class="card" style="margin-top:16px"><ol class="steps" id="out"></ol></div>
+    </section>
+  </div>
+</main>
+</body>
+</html>

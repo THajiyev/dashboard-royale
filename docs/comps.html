@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Comps</title>
+<meta name="description" content="What the loyalty comp program cost, the May 1 drop in the points price of comps, tier growth, and how to test what it did.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/comps.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1 id="title">Comps</h1>
+      <p>Card holders earn about one point per dollar wagered and spend points on food and drink. The casino's real cost of a comp is
+        a little over a quarter of its menu price. On May 1 every comp started costing about half as many points, at every tier.</p>
+    </div>
+    <div class="controls" id="period"></div>
+  </div>
+
+  <section class="stats" id="stats" aria-label="Comp summary"></section>
+
+  <section class="card" aria-labelledby="price-h">
+    <div class="card-head">
+      <div>
+        <h2 id="price-h">Points needed for $1 of comps</h2>
+        <p>Median per gaming day, by the player's tier at redemption.</p>
+      </div>
+      <div class="legend" id="price-legend"></div>
+    </div>
+    <svg class="chart" id="price" height="300" role="img" aria-label="Line chart of points per dollar of comps by tier, stepping down on May 1"></svg>
+  </section>
+
+  <section class="section" aria-labelledby="may-h">
+    <h2 id="may-h">What happened on May 1</h2>
+    <p>The comp redemption rate was changed floor-wide, at the start of the May 1 gaming day. This is the same lever as the catalogue's
+      "change comp redemption rate floor-wide" action, set from 15 to 7, without a control group.</p>
+    <div class="grid-2">
+      <div class="card"><div class="card-head"><div><h2>The evidence</h2></div></div><ol class="steps" id="may-ev"></ol></div>
+      <div class="card"><div class="card-head"><div><h2>Did it bring in play?</h2>
+        <p>Local card holders' theo, indexed to their Mar–Apr average. Visitors almost never return, so they can't be compared this way.</p></div></div>
+        <div class="table-wrap"><table id="may-co"></table></div>
+        <p class="note" id="may-co-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid-2 section">
+    <section aria-labelledby="ba-h">
+      <h2 id="ba-h">Before and after May 1</h2>
+      <p class="prose" style="margin:4px 0 16px">Comps got half as expensive in points, but guests didn't redeem much more often or for
+        bigger items. They spent fewer points and kept the rest.</p>
+      <div class="card table-wrap" style="padding:8px 8px 4px"><table id="ba"></table></div>
+      <p class="callout" style="margin-top:16px" id="liab"></p>
+    </section>
+    <section aria-labelledby="tier-h">
+      <h2 id="tier-h">Tiers</h2>
+      <p class="prose" style="margin:4px 0 16px">Higher tiers pay fewer points per comp and get more back per dollar of expected loss.
+        Platinum and Gold grew every month, which raises the program's cost even before the price change.</p>
+      <div class="card table-wrap" style="padding:8px 8px 4px"><table id="tiers"></table></div>
+    </section>
+  </div>
+
+  <section class="section" aria-labelledby="mon-h">
+    <h2 id="mon-h">Month by month</h2>
+    <p>Reinvestment is the comps' real cost divided by tracked theo, the expected loss of the same card holders.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="months"></table></div>
+  </section>
+
+  <div class="grid-2 section">
+    <section aria-labelledby="know-h">
+      <h2 id="know-h">What we can and can't tell</h2>
+      <div class="card" style="margin-top:16px"><ol class="steps" id="know"></ol></div>
+    </section>
+    <section aria-labelledby="test-h">
+      <h2 id="test-h">How to find out what it did</h2>
+      <div class="card" style="margin-top:16px">
+        <p class="prose" style="margin:0 0 12px">The comp policy pilot ($4,000) can answer what the data can't: split card holders at random,
+          put half back on the old prices, and compare for 30 days.</p>
+        <ol class="steps">
+          <li><span><strong>Groups.</strong> Random half of active card holders, stratified by tier and home region.</span></li>
+          <li><span><strong>Measure.</strong> Theo per card holder and visits per card holder, test vs control, plus comp cost per dollar of theo.</span></li>
+          <li><span><strong>Decide.</strong> Keep the cheaper prices only if the extra play is worth more than the extra comp cost.</span></li>
+        </ol>
+        <p class="note">A floor-wide rate change ($1,500) can't be combined with the pilot, and changing prices again without a control group
+          repeats May's problem: no way to tell what it did. <a href="actions.html">Open the action plan</a></p>
+      </div>
+    </section>
+  </div>
+</main>
+</body>
+</html>

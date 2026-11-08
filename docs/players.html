@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Players</title>
+<meta name="description" content="What tracked players wagered, got back and netted, how concentrated the results are, and how each player's result compares with what the games' odds predict.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/players.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1 id="title">Tracked players</h1>
+      <p>Loyalty-card play only, about two thirds of all coin-in (66%, Jan–Jun). For every player, expected payout is what the games' configured odds
+        return on what they wagered; luck is what they actually got back minus that. Shown to describe outcomes, not to target anyone.</p>
+    </div>
+    <div class="controls">
+      <label class="field">Group <select id="seg" aria-label="Guest group"></select></label>
+      <span id="period" class="controls"></span>
+    </div>
+  </div>
+
+  <section class="stats" id="stats" aria-label="Player summary"></section>
+
+  <div class="grid-3-1">
+    <section class="card" aria-labelledby="lor-h">
+      <div class="card-head">
+        <div>
+          <h2 id="lor-h">How concentrated the losses are</h2>
+          <p>Players ranked from the biggest net loss down. The curve shows what share of all player losses the top players account for.</p>
+        </div>
+        <div class="legend">
+          <span><i style="background:var(--accent)"></i>Actual net losses</span>
+          <span><i class="dash"></i>Expected losses (theo)</span>
+        </div>
+      </div>
+      <svg class="chart" id="lor" height="320" role="img" aria-label="Concentration curve of player losses"></svg>
+      <p class="note" id="lor-note"></p>
+    </section>
+    <section class="card" aria-labelledby="grp-h">
+      <div class="card-head"><div><h2 id="grp-h">By guest group</h2><p>Select a row to filter the page.</p></div></div>
+      <div class="table-wrap"><table id="groups"></table></div>
+    </section>
+  </div>
+
+  <section class="section" aria-labelledby="odd-h">
+    <h2 id="odd-h">How unusual were the results?</h2>
+    <p>A p-value per player for two questions, and the spread of those p-values across all players. If play is fair, p-values are spread
+      evenly, so every band sits near the flat line; a pile-up near 0 means more unusual results than chance gives.</p>
+    <ol class="steps prose" style="margin:0 0 16px">
+      <li><span><strong>Win rate.</strong> How often their spins paid anything, against each game's published hit probability.
+        Exact binomial test, then Benjamini–Hochberg correction for testing every player.</span></li>
+      <li><span><strong>Payout.</strong> Actual against expected payout. Jackpots make slot payouts lopsided, so the bell curve would call
+        thousands of fair players anomalous. The p-value is empirical instead: twice the share of players on the same game with a similar
+        number of spins whose result was at least as extreme.</span></li>
+    </ol>
+    <div class="grid-2">
+      <div class="card"><div class="card-head"><div><h2>Win-rate p-values</h2><p id="hit-sub"></p></div></div>
+        <svg class="chart" id="hhit" height="200" role="img" aria-label="Histogram of win-rate p-values across players"></svg></div>
+      <div class="card"><div class="card-head"><div><h2>Payout p-values, vs peers</h2><p id="z-sub"></p></div></div>
+        <svg class="chart" id="hz" height="200" role="img" aria-label="Histogram of payout p-values across players"></svg></div>
+    </div>
+    <div class="legend" style="margin-top:12px"><span><i class="box" style="background:var(--ink-3);opacity:.55"></i>Players per p-value band</span><span><i class="box" style="background:var(--accent)"></i>p below 0.05</span><span><i style="background:var(--ink)"></i>Flat: what fair play gives</span></div>
+  </section>
+
+  <section class="section" aria-labelledby="hitl-h">
+    <h2 id="hitl-h">Win rate off the game's odds</h2>
+    <p id="hitl-p">Players whose share of paying spins is furthest from what their games promise. Flagged means it survives correction for testing every player.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="hitl"></table></div>
+  </section>
+
+  <section class="section" aria-labelledby="mon-h">
+    <h2 id="mon-h">Biggest results against expectation</h2>
+    <p>Dollar difference between what came back and what the odds predicted. Peer rank compares the z-score with players
+      on the same game and a similar number of spins.</p>
+    <div class="controls" style="margin-bottom:12px">
+      <div class="seg" role="group" aria-label="Direction" id="mdir">
+        <button type="button" data-d="up">Luckiest</button><button type="button" data-d="down">Unluckiest</button>
+      </div>
+    </div>
+    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="mon"></table></div>
+  </section>
+
+  <section class="section" aria-labelledby="all-h">
+    <h2 id="all-h">Every player, Jan–Jun</h2>
+    <p>All 96,559 card holders who played. The file is large (7.5 MB), so it loads when you ask for it.</p>
+    <div class="controls" style="margin-bottom:12px" id="all-ctl">
+      <button class="btn primary" type="button" id="load-all">Load every player</button>
+    </div>
+    <div id="all-wrap" hidden>
+      <div class="controls" style="margin-bottom:12px">
+        <input type="search" id="all-q" placeholder="Player ID" aria-label="Find a player by ID">
+        <label class="field">Sort <select id="all-sort" aria-label="Sort players">
+          <option value="diff">Difference, $</option><option value="pctd">Difference, %</option><option value="z">Payout z</option>
+          <option value="mp">Payout p</option><option value="hz">Win-rate z</option><option value="hp">Win-rate p</option><option value="ci">Wagered</option></select></label>
+        <div class="seg" role="group" aria-label="Order" id="all-ord"><button type="button" data-o="desc">High first</button><button type="button" data-o="asc">Low first</button></div>
+        <span class="muted small" id="all-count"></span>
+      </div>
+      <div class="card table-wrap" style="padding:8px 8px 4px"><table id="all"></table></div>
+      <div style="margin-top:12px;display:flex;gap:8px"><button class="btn" type="button" id="all-prev">Previous</button><button class="btn" type="button" id="all-next">Next</button></div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Machines</title>
+<meta name="description" content="Every machine ranked by luck: house win against theo, with a payout check and the GM's bottom 10 re-examined.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/machines.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1 id="title">Luck ranking</h1>
+      <p>Luck is house win minus theo, the win the game's payout rate predicts for the amount played.
+        A fair machine lands within ±1.96 standard deviations 95% of the time, so about one machine in twenty
+        looks unusual by chance alone. One machine stands out because its payouts don't match its configuration.</p>
+    </div>
+    <div class="controls" id="period"></div>
+  </div>
+
+  <section class="stats" id="stats" aria-label="Luck summary"></section>
+
+  <section class="section" style="margin-top:0;margin-bottom:24px" aria-labelledby="flags-h">
+    <h2 id="flags-h">Flagged machines</h2>
+    <p><span class="tag"><span class="dot lead"></span>Flagged</span>: payout rate off its configuration, or luck beyond chance, after correcting for
+      testing every machine. <span class="tag"><span class="dot watch"></span>Watch</span>: luck outside the 99% range, a monthly drift alarm,
+      or carded players flagged for win rate who played mostly on it. Across 310 fair machines about four drift alarms happen
+      by chance, so most watch entries are noise worth a second look next month. A flag is a reason to inspect, not proof of anything.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="flags"></table></div>
+  </section>
+
+  <section class="card" aria-labelledby="cat-h">
+    <div class="card-head">
+      <div>
+        <h2 id="cat-h">Every machine, from luckiest to unluckiest for the house</h2>
+        <p>Each dot is one machine's luck z. The grey band is the range fair play produces 95% of the time.</p>
+      </div>
+      <div class="legend">
+        <span><i class="box" style="background:var(--band)"></i>Fair range, ±1.96</span>
+        <span><svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--ink)" stroke-width="1.5"/></svg>GM's bottom 10</span>
+        <span><svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="var(--neg)"/></svg>Flagged</span>
+        <span><svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--neg)" stroke-width="1.5"/></svg>Watch</span>
+      </div>
+    </div>
+    <svg class="chart" id="cat" height="300" role="img" aria-label="Dot plot of luck z for every machine, sorted"></svg>
+  </section>
+
+  <section class="section" aria-labelledby="b10-h">
+    <h2 id="b10-h">The GM's bottom 10, re-examined</h2>
+    <p>The ten lowest house wins, Jan–Jun. The verdicts combine luck, the payout check, location and game
+      from the location model, so they don't change with the period.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="b10"></table></div>
+  </section>
+
+  <section class="section" aria-labelledby="rank-h">
+    <h2 id="rank-h">Ranking</h2>
+    <p>Hold band: the grey bar is where a fair machine's hold lands 99% of the time, the tick is its configured hold,
+      the dot is what it held. A red dot sits outside the band.</p>
+    <div class="controls" style="margin-bottom:12px">
+      <input type="search" id="q" placeholder="Machine or game" aria-label="Find a machine or game">
+      <label class="field">Zone <select id="zone" aria-label="Zone"><option value="">All zones</option></select></label>
+      <div class="seg" role="group" aria-label="Order" id="order">
+        <button type="button" data-o="best">Luckiest first</button>
+        <button type="button" data-o="worst">Unluckiest first</button>
+      </div>
+      <div class="seg" role="group" aria-label="Show" id="fl">
+        <button type="button" data-f="0">All machines</button>
+        <button type="button" data-f="1">Flagged and watch</button>
+      </div>
+    </div>
+    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="rank"></table></div>
+    <div style="margin-top:12px"><button class="btn" type="button" id="more">Show all</button></div>
+  </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gilded Ace Models</title>
+<meta name="description" content="How the forecast baseline was built, every model tested against it on a frozen time holdout, and how the intervals were made.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/core.js"></script>
+<script defer src="assets/models.js"></script>
+</head>
+<body>
+<main class="page" id="main">
+  <div class="page-head">
+    <div>
+      <h1>Models and validation</h1>
+      <p>Every forecast was trained on Jan 1 – Apr 30 and scored once on May 1 – Jun 30. Only models chosen before
+        May count as honest wins; the rest are shown so you can see what hindsight would have picked.</p>
+    </div>
+  </div>
+
+  <div class="grid-3-1">
+    <section class="card" aria-labelledby="proto-h">
+      <div class="card-head"><div><h2 id="proto-h">The test, step by step</h2></div></div>
+      <ol class="steps">
+        <li><span><strong>Split by time.</strong> Jan 1 – Apr 30 (120 days) to learn, May 1 – Jun 30 (61 days) to test. No random split, so no future day leaks into training.</span></li>
+        <li><span><strong>Build the baseline.</strong> B1 is the Jan–Apr average theo for each day of the week, the chart on the right. No events, holidays or outside data.</span></li>
+        <li><span><strong>Choose in advance.</strong> Candidates were ranked by rolling-origin cross-validation inside Jan–Apr. The pick was recorded before May was opened.</span></li>
+        <li><span><strong>Freeze.</strong> A fixed forecast is made once on Apr 30 for all 61 days. A refresh model refits every 7 days using only data up to that day.</span></li>
+        <li><span><strong>Score once.</strong> RMSE is the main metric, MAE alongside. The 95% CI on the change vs B1 comes from a 7-day moving-block bootstrap, 2,000 resamples.</span></li>
+        <li><span><strong>Make intervals honestly.</strong> 90% bands are split-conformal: quantiles of each model's Jan–Apr cross-validation errors, applied to the frozen forecast.</span></li>
+      </ol>
+    </section>
+    <section class="card" aria-labelledby="b1-h">
+      <div class="card-head"><div><h2 id="b1-h">B1, the baseline</h2><p>Mean daily theo by weekday, Jan–Apr</p></div></div>
+      <svg class="chart" id="b1" height="200" role="img" aria-label="Bar chart of the B1 baseline: average theo for each weekday"></svg>
+      <p class="note">Friday and Saturday carry the week. B1 repeats this pattern for every future week, which is why it misses event days and slow drifts.</p>
+    </section>
+  </div>
+
+  <section class="section card" aria-labelledby="forest-h">
+    <div class="card-head">
+      <div>
+        <h2 id="forest-h">Every model against B1, May–Jun</h2>
+        <p>Change in RMSE vs the baseline with its 95% interval. Left of zero is better. Sorted by RMSE.</p>
+      </div>
+      <div class="legend">
+        <span><svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="var(--accent)"/></svg>Picked in advance</span>
+        <span><svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--ink-3)" stroke-width="1.5"/></svg>Scored after the fact</span>
+      </div>
+    </div>
+    <svg class="chart" id="forest" role="img" aria-label="Interval plot of each model's RMSE change versus the B1 baseline"></svg>
+  </section>
+
+  <section class="section" aria-labelledby="tab-h">
+    <h2 id="tab-h">The numbers behind it</h2>
+    <p>Event days are EDC (May 16–18) and Locals Week (Jun 9–15). The 90% band should catch about 55 of 61 days; most catch fewer, so the bands are too narrow.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="tab"></table></div>
+  </section>
+
+  <div class="grid-2 section">
+    <section aria-labelledby="it-h">
+      <h2 id="it-h">Five rounds of trying to beat it</h2>
+      <div class="card" style="margin-top:16px"><ol class="steps" id="iters"></ol></div>
+    </section>
+    <section aria-labelledby="floor-h">
+      <h2 id="floor-h">How close to the limit</h2>
+      <p class="prose" style="margin:4px 0 16px">Ordinary-day RMSE of fits that were allowed to see the answers. If hindsight can only
+        do this well, a forecast made weeks ahead has little left to gain without new information, such as hotel bookings.</p>
+      <div class="card table-wrap" style="padding:8px 8px 4px"><table id="noise"></table></div>
+      <p class="note">Source: <span class="mono">analysis/experiments/iter5/noise_floor.csv</span></p>
+    </section>
+  </div>
+
+  <section class="section" aria-labelledby="p2-h">
+    <h2 id="p2-h">Classical and machine-learning models</h2>
+    <p>The first round, scored on MAE. The model cross-validation picked (LightGBM) came 7th on the holdout:
+      two folds of Jan–Apr were too noisy to choose between models whose errors differ by about $500 a day.</p>
+    <div class="card table-wrap" style="padding:8px 8px 4px"><table id="p2"></table></div>
+  </section>
+
+  <div class="grid-2 section">
+    <section aria-labelledby="mm-h">
+      <h2 id="mm-h">Machine model: is it the machine or the spot?</h2>
+      <p class="prose" style="margin:4px 0 16px">Coin-in per available hour for each machine-day in May–Jun, from models fit on Jan–Apr.
+        Knowing a machine's bank and game beats knowing its own history.</p>
+      <div class="card table-wrap" style="padding:8px 8px 4px"><table id="mm"></table></div>
+      <p class="note">Machine effects after location and game are small (spread τ ≈ 1.7%) and barely persist into May–Jun (Spearman 0.27).
+        None of the GM's bottom 10 has a credibly negative machine effect. Source: <span class="mono">analysis/models.md</span>, Phase 3.</p>
+    </section>
+    <section aria-labelledby="iv-h">
+      <h2 id="iv-h">Change-impact estimator, checked on fake changes</h2>
+      <p class="prose" style="margin:4px 0 16px">Before reading any real result, 150 fake changes were planted at random units and dates,
+        with no effect and with −15% or +10% injected. Intervals widened by ×1.25 (fit on one seed, confirmed on another).</p>
+      <div class="card table-wrap" style="padding:8px 8px 4px"><table id="iv"></table></div>
+      <p class="note">A single machine's change has to be large to show: +10% is caught a third of the time. Source: <span class="mono">analysis/impact.md</span>.</p>
+    </section>
+  </div>
+</main>
+</body>
+</html>
