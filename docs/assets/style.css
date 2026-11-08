@@ -188,7 +188,7 @@ tbody tr.clickable { cursor: pointer; }
 tbody tr.clickable:hover, tbody tr.on { background: var(--raised); }
 td .sub { display: block; color: var(--ink-3); font-size: 12px; line-height: 16px; }
 tr.hl td { color: var(--ink); font-weight: 500; }
-.tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; color: var(--ink-2); white-space: nowrap; }
+.tag { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/16px var(--sans); font-stretch: normal; color: var(--ink-2); white-space: nowrap; }
 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--ink-3); }
 .dot.lead { background: var(--neg); }
 .dot.ok { background: var(--pos); }

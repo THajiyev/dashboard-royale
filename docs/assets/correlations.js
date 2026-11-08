@@ -21,6 +21,7 @@
   });
 
   const r2 = (v) => (v == null ? "–" : v.toFixed(2).replace("-", "−"));
+  const r3 = (v) => (v == null ? "–" : (Object.is(v, -0) ? 0 : v).toFixed(3).replace("-", "−"));
   const q = (x) => `q ${C.peq(x.q)}`;
   const pairTable = (el, M, sym) => {
     const rows = C.topPairs(M, 8);
@@ -79,6 +80,16 @@
       <li><b>Luck doesn't</b>: a player's luck in Jan–Mar against Apr–Jun, ${r2(l.r)}. With ${C.int(B.n)} players even this is "significant" (${q(l)}), but it's negligible. Nobody is beating the games, which supports the Players page.</li>
       <li><b>A correlation that isn't a cause</b>: lucky players seem to return more (${r2(lv.r)}). Holding their Jan–Mar visits and theo fixed, it drops to ${r2(P.r)} (p ${C.peq(P.p)}). Heavy players just have both.</li>
       <li><b>Comps follow play</b>: comps with play hours ${r2(ch.r)}, while comps ÷ theo barely moves with theo (${r2(ct.r)}). Reinvestment is close to flat across player sizes.</li>`;
+    const A = B.age, strongest = A.rows.reduce((best, row) => Math.abs(row.r) > Math.abs(best.r) ? row : best);
+    $("#age-meta").textContent = `Spearman ρ · ${C.int(A.n)} carded players with known age`;
+    $("#age-tab").innerHTML = `<thead><tr><th>Player measure</th><th class="num">ρ</th><th class="num">q (BH)</th><th class="num">n</th></tr></thead><tbody>
+      ${A.rows.map((row) => `<tr><td>${C.esc(row.metric)}</td><td class="num">${r3(row.r)}</td><td class="num">${C.pfmt(row.q)}</td><td class="num">${C.int(row.n)}</td></tr>`).join("")}</tbody>`;
+    const significant = A.rows.filter((row) => row.q < 0.05);
+    $("#age-says").innerHTML = significant.length
+      ? `<li><b>${significant.length} of four age relationships survive correction.</b> The largest is age band with ${C.esc(strongest.metric)} (ρ ${r3(strongest.r)}, ${C.pfmt(strongest.q)}).</li>
+        <li>These are associations in synthetic carded-player data, not evidence that age causes a play pattern.</li>`
+      : `<li><b>No age relationship survives correction.</b> The largest effect is age band with ${C.esc(strongest.metric)} (ρ ${r3(strongest.r)}, q ${C.pfmt(strongest.q)}), which is negligible.</li>
+        <li>These are associations in synthetic carded-player data, not evidence that age causes a play pattern.</li>`;
   }
 
   function errors(D) {

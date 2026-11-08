@@ -26,7 +26,7 @@ sys.path[:0] = [str(ROOT / "analysis"), str(ROOT / "analysis" / "experiments"),
 from common import active_machine_days, load  # noqa: E402
 from ds_alpha.models import _EV  # noqa: E402
 from segments import segment_day  # noqa: E402
-from build_site_data import dump, r  # noqa: E402
+from build_site_data import MONTHS, dump, r  # noqa: E402
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 CLOSURE = (pd.Timestamp("2025-03-03"), pd.Timestamp("2025-04-06"))
@@ -343,7 +343,50 @@ def player_matrix():
     rb = sm.OLS(s["Visits, Apr–Jun"], Z).fit().resid
     pr = stats.pearsonr(ra, rb)
     partial = {"r": r(pr[0], 3), "p": pfmt(pr[1]), "n": int(len(s))}
-    return {"id": "players", "vars": list(X.columns), "modes": {"all": out}, "n": int(len(X)), "luckReturn": partial}
+    return {"id": "players", "vars": list(X.columns), "modes": {"all": out}, "n": int(len(X)),
+            "luckReturn": partial, "age": age_correlations()}
+
+
+def age_correlations():
+    bands = ["21-34", "35-49", "50-64", "65+"]
+    sessions = pd.read_parquet(
+        ROOT / "data/3_guests/sessions.parquet",
+        columns=["player_id", "gaming_date", "logical_session_id", "coin_in_cents", "payout_cents", "theo_cents"],
+    )
+    sessions["month"] = sessions.gaming_date.astype(str).str[:7]
+    sessions = sessions[sessions.month.isin(MONTHS)].copy()
+    sessions["coin_in"] = sessions.coin_in_cents / 100
+    sessions["payout"] = sessions.payout_cents / 100
+    sessions["theo"] = sessions.theo_cents / 100
+    g = sessions.groupby("player_id").agg(
+        sessions=("logical_session_id", "nunique"),
+        coin_in=("coin_in", "sum"),
+        payout=("payout", "sum"),
+        theo=("theo", "sum"),
+    )
+    guests = pd.read_parquet(ROOT / "data/3_guests/players.parquet", columns=["player_id", "age_band"]).set_index("player_id")
+    g = g.join(guests.age_band, how="left")
+    unknown = int((~g.age_band.isin(bands)).sum())
+    g = g[g.age_band.isin(bands) & (g.coin_in > 0)].copy()
+    age = g.age_band.map({band: i for i, band in enumerate(bands)})
+    metrics = {
+        "Sessions, Jan–Jun": g.sessions,
+        "Coin-in, Jan–Jun": g.coin_in,
+        "Theo per session": g.theo / g.sessions,
+        "Net result ÷ coin-in": (g.payout - g.coin_in) / g.coin_in,
+    }
+
+    results = []
+    for metric, values in metrics.items():
+        valid = pd.DataFrame({"age": age, "value": values}).replace([np.inf, -np.inf], np.nan).dropna()
+        corr = stats.spearmanr(valid.age.to_numpy(), valid.value.to_numpy())
+        results.append({"metric": metric, "r": float(corr[0]), "p": float(corr[1]), "n": len(valid)})
+    q = multipletests([x["p"] for x in results], method="fdr_bh")[1]
+    for row, value in zip(results, q):
+        row["r"] = r(row["r"], 3)
+        row["p"] = pfmt(row["p"])
+        row["q"] = pfmt(value)
+    return {"n": int(len(g)), "unknown": unknown, "bands": bands, "rows": results}
 
 
 def error_matrix():
