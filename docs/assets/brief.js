@@ -4,9 +4,10 @@
   "use strict";
   const C = window.Core, $ = C.$;
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("index.html", async () => {
     let K;
     try { K = await C.load("claims"); } catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     const by = Object.fromEntries(K.claims.map((c) => [c.id, c]));
     const ok = K.claims.filter((c) => c.pass).length;
 

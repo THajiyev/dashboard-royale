@@ -1,20 +1,21 @@
-/* Forecast page: Jan–Jun daily theo, May–Jun holdout forecasts with EL's 90% band,
+/* Forecast page: Jan–Jun daily theo, May–Jun holdout forecasts with our model's 90% band,
    the July no-action yardstick, the locals/visitors split and the measurement plan. */
 (function () {
   "use strict";
   const C = window.Core, $ = C.$;
   const SERIES = [
-    { k: "EL", name: "EL event-type lift", note: "picked in advance", color: "--series-model", on: true },
-    { k: "B1", name: "B1 weekday mean", note: "baseline", color: "--series-base", dash: true, on: true },
-    { k: "EL2A", name: "EL2A weekly refresh", note: "iteration 3", color: "--div-pos", on: false },
-    { k: "SEG", name: "Locals + visitors", note: "iteration 5", color: "--seq-3", on: false },
+    { k: "EL", label: "Our model", name: "Our model", note: "picked in advance", color: "--series-model", on: true },
+    { k: "B1", label: "Weekday baseline", name: "Weekday baseline", note: "B1", color: "--series-base", dash: true, on: true },
+    { k: "EL2A", label: "Weekly refit", name: "Weekly refit", note: "iteration 3", color: "--div-pos", on: false },
+    { k: "SEG", label: "Locals + visitors", name: "Locals + visitors", note: "iteration 5", color: "--seq-3", on: false },
   ];
   const S = { a: 0, b: 5 };
   let D, Mo;
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("forecast.html", async () => {
     try { [D, Mo] = await Promise.all([C.load("forecast"), C.load("models")]); }
     catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     try { const on = JSON.parse(localStorage.getItem("ga-fc-series")); if (on) SERIES.forEach((s) => { s.on = on.includes(s.k); }); } catch { /* */ }
     [S.a, S.b] = C.periodControl($("#period"), (a, b) => { S.a = a; S.b = b; render(); });
     $("#series").onclick = (e) => {
@@ -24,19 +25,19 @@
       render();
     };
     render(); tables();
-    addEventListener("themechange", render);
-    addEventListener("resize", drawChart);
+    C.listen(window, "themechange", render);
+    C.listen(window, "resize", drawChart);
   });
 
   const mae = (k) => D.holdout.reduce((t, r) => t + Math.abs(r[k] - r.actual), 0) / D.holdout.length;
   function render() {
-    $("#title").textContent = `Demand, ${C.periodLabel(S.a, S.b)}`;
+    $("#title").textContent = `Demand · ${C.periodLabel(S.a, S.b)}`;
     $("#series").innerHTML = SERIES.map((s) => `<button type="button" class="chip" data-k="${s.k}" aria-pressed="${s.on}">
-      <i style="background:${s.dash ? "repeating-linear-gradient(90deg,var(--series-base) 0 4px,transparent 4px 7px)" : `var(${s.color})`}"></i>${s.k}</button>`).join("");
+      <i style="background:${s.dash ? "repeating-linear-gradient(90deg,var(--series-base) 0 4px,transparent 4px 7px)" : `var(${s.color})`}"></i>${s.label}</button>`).join("");
     const vs = Mo.vsB1.find((r) => r.model === "EL event-type lift");
     const cover = D.holdout.filter((r) => r.actual >= r.EL * Math.exp(D.bands.EL[0]) && r.actual <= r.EL * Math.exp(D.bands.EL[1])).length / D.holdout.length;
     $("#stats").innerHTML = [
-      ["EL average daily miss", C.usd(mae("EL")), `May–Jun, ${C.pct(mae("EL") / avg("actual"), 1)} of daily theo`],
+      ["Our model average daily miss", C.usd(mae("EL")), `May–Jun, ${C.pct(mae("EL") / avg("actual"), 1)} of daily theo`],
       ["B1 baseline average miss", C.usd(mae("B1")), "Weekday means of Jan–Apr, nothing else"],
       ["RMSE vs B1", C.pct(vs.dRMSE_vs_B1, 0, true), `95% CI ${C.pct(vs.dRMSE_lo, 0, true)} to ${C.pct(vs.dRMSE_hi, 0, true)}, block bootstrap`],
       ["90% band caught", C.pct(cover, 0), "of holdout days; the band is too narrow"],
@@ -92,9 +93,11 @@
     svg.innerHTML = g;
     $("#fc-legend").innerHTML = `<span><i style="background:var(--series-actual)"></i>Actual</span>` +
       on.map((s) => `<span><i class="${s.dash ? "dash" : ""}" style="${s.dash ? "" : `background:var(${s.color})`}"></i>${s.name}, ${s.note}</span>`).join("") +
-      (SERIES[0].on ? `<span><i class="box" style="background:var(--accent-soft)"></i>EL 90% band</span>` : "") +
+      (SERIES[0].on ? `<span><i class="box" style="background:var(--accent-soft)"></i>Our model 90% band</span>` : "") +
       `<span><i class="box" style="background:var(--event);box-shadow:inset 0 0 0 1px var(--line)"></i>Event days</span>`;
 
+    C.dataTable($("#fc-legend"), "fc-table", "Daily floor theo with the forecasts shown", ["Gaming day", "Actual", ...on.map((s) => s.label)],
+      days.map((r) => [C.date(r.d, { weekday: "short", month: "short", day: "numeric" }), C.usd(r.theo), ...on.map((s) => (ho[r.d] ? C.usd(ho[r.d][s.k]) : "–"))]));
     svg.onmousemove = (e) => {
       const rc = svg.getBoundingClientRect(), px = ((e.clientX - rc.left) / rc.width) * W;
       const i = Math.max(0, Math.min(days.length - 1, Math.round(((px - P.l) / (W - P.l - P.r)) * (days.length - 1))));
@@ -104,12 +107,12 @@
       $("#fc-dots").innerHTML = `<circle cx="${x(i)}" cy="${y(r.theo)}" r="4" fill="var(--series-actual)" stroke="var(--card)" stroke-width="2"/>` +
         (h ? on.map((s) => `<circle cx="${x(i)}" cy="${y(h[s.k])}" r="4" fill="var(${s.color})" stroke="var(--card)" stroke-width="2"/>`).join("") : "");
       C.tip(C.tipRows(C.date(r.d, { weekday: "short", month: "short", day: "numeric" }) + (ev ? `, ${C.esc(ev.name)}` : ""),
-        [["Actual", C.usd(r.theo)], ...(h ? on.map((s) => [s.k, `${C.usd(h[s.k])} (${C.pct(h[s.k] / r.theo - 1, 1, true)})`]) : [])]), e);
+        [["Actual", C.usd(r.theo)], ...(h ? on.map((s) => [s.label, `${C.usd(h[s.k])} (${C.pct(h[s.k] / r.theo - 1, 1, true)})`]) : [])]), e);
     };
     svg.onmouseleave = () => { C.tip(null); $("#fc-x")?.setAttribute("opacity", 0); $("#fc-dots") && ($("#fc-dots").innerHTML = ""); };
   }
 
-  // The two decisions EL changes relative to B1, computed from the frozen holdout forecasts.
+  // The two decisions our model changes relative to the weekday baseline, computed from the frozen holdout forecasts.
   function decisions() {
     const isEv = (d) => D.events.some((e) => d >= e.start_date && d <= e.end_date);
     const sum = (rows, k) => rows.reduce((t, r) => t + r[k], 0);
@@ -120,7 +123,7 @@
     const julB1 = D.july.reduce((t, r) => t + D.b1Weekday[wd(r.gaming_date)], 0);
     const julCf = D.july.reduce((t, r) => t + r.forecast_level_adj, 0);
     const row = (l, b, e, hl) => `<tr class="${hl ? "hl" : ""}"><td>${l}</td><td class="num">${b}</td><td class="num">${e}</td></tr>`;
-    $("#dec1").innerHTML = `<thead><tr><th></th><th class="num">B1 weekday mean</th><th class="num">EL; July re-anchored to June</th></tr></thead><tbody>
+    $("#dec1").innerHTML = `<thead><tr><th></th><th class="num">Weekday baseline</th><th class="num">Our model; July re-anchored to June</th></tr></thead><tbody>
       ${row("Over-forecast on June's ordinary days", C.pct(b1Bias, 1, true), C.pct(elBias, 1, true))}
       ${row("A 30-day test can detect", C.pct(mde, 1), C.pct(mde, 1))}
       ${row("Expected July theo with no action", C.usd(julB1, { short: true }), C.usd(julCf, { short: true }), true)}</tbody>`;
@@ -128,12 +131,12 @@
       <strong>Measure July against the June-anchored forecast.</strong>`;
     const edc = D.holdout.filter((r) => r.d >= "2025-05-16" && r.d <= "2025-05-18");
     const a = sum(edc, "actual"), b = sum(edc, "B1"), e = sum(edc, "EL");
-    $("#dec2").innerHTML = `<thead><tr><th>EDC weekend, May 16–18</th><th class="num">B1 weekday mean</th><th class="num">EL event-type lift</th></tr></thead><tbody>
+    $("#dec2").innerHTML = `<thead><tr><th>EDC weekend, May 16–18</th><th class="num">Weekday baseline</th><th class="num">Our model</th></tr></thead><tbody>
       ${row("Planned theo", C.usd(b, { short: true }), C.usd(e, { short: true }))}
       ${row("Actual theo", C.usd(a, { short: true }), C.usd(a, { short: true }))}
       ${row("Miss", C.pct(b / a - 1, 1, true), C.pct(e / a - 1, 1, true), true)}</tbody>`;
     $("#dec2-p").innerHTML = `Festivals and sports lift play 17–20%; conventions barely 3%.
-      <strong>Staff event weekends to EL, and schedule maintenance away from them.</strong>`;
+      <strong>Use our model to plan for event weekends, and schedule maintenance away from them.</strong>`;
   }
 
   function tables() {

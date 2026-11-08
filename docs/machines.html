@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gilded Ace Machines</title>
+<title>Casino Manager | Machines</title>
 <meta name="description" content="Every machine ranked by luck: house win against theo, with a payout check and the GM's bottom 10 re-examined.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Gilded Ace Machines">
+<meta property="og:title" content="Casino Manager | Machines">
 <meta property="og:description" content="Every machine ranked by luck: house win against theo, with a payout check and the GM's bottom 10 re-examined.">
 <meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=optional" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <script defer src="assets/core.js"></script>
 <script defer src="assets/machines.js"></script>
@@ -21,6 +21,7 @@
 <main class="page" id="main">
   <div class="page-head">
     <div>
+      <p class="qa-q">Which machines are truly underperforming once you account for exposure, availability and luck?</p>
       <h1 id="title">Luck ranking</h1>
       <p>Luck is house win minus theo, the win the game's payout rate predicts for the amount played.
         A fair machine lands within ±1.96 standard deviations 95% of the time, so about one machine in twenty
@@ -44,7 +45,7 @@
         <span><svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--neg)" stroke-width="1.5"/></svg>Watch</span>
       </div>
     </div>
-    <svg class="chart" id="cat" height="300" role="img" aria-label="Dot plot of luck z for every machine, sorted"></svg>
+    <svg class="chart" id="cat" height="300" role="img" aria-label="Dot plot of machine luck, sorted from luckiest to unluckiest. Horizontal axis: machines sorted by luck. Vertical axis: luck in standard deviations."></svg>
   </section>
 
   <section class="section" aria-labelledby="flags-h">

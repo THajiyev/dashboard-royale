@@ -3,27 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gilded Ace Actions</title>
+<title>Casino Manager | Actions</title>
 <meta name="description" content="The $100,000 plan for July 2025: up to three priced actions, each with its expected effect, uncertainty, measurement plan and evidence.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Gilded Ace Actions">
+<meta property="og:title" content="Casino Manager | Actions">
 <meta property="og:description" content="The $100,000 plan for July 2025: up to three priced actions, each with its expected effect, uncertainty, measurement plan and evidence.">
 <meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=optional" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <script defer src="assets/core.js"></script>
 <script defer src="assets/moves.js"></script>
+<script defer src="assets/benefits.js"></script>
 <script defer src="assets/actions.js"></script>
 </head>
 <body>
 <main class="page" id="main">
   <div class="page-head">
     <div>
-      <h1>Our plan: three actions for <span id="rec-total">$51,900</span></h1>
-      <p>Replacing the bottom 10 wouldn't help: they're low because of where they sit. So we move machines to better spots instead.</p>
+      <p class="qa-q">Which actions would you fund with $100,000, and how would you know they worked?</p>
+      <h1 id="rec-title">Our plan</h1>
+      <p id="rec-lede"></p>
     </div>
   </div>
 
@@ -33,36 +35,67 @@
     <p class="note" id="rec-note"></p>
   </section>
 
+  <section class="section" aria-labelledby="ben-h">
+    <h2 id="ben-h">Other options</h2>
+    <p>The rest of the catalogue, best first. Open one to see why it isn't in the plan.</p>
+    <div class="why-list" id="ben"></div>
+  </section>
+
+  <section class="section" aria-labelledby="asm-h">
+    <h2 id="asm-h">What we had to assume</h2>
+    <p>Most of the numbers above come from Jan–Jun. Four don't: nothing in the data says how much these would change, so we picked a central value and a range.
+      The central value gives each action's main figure; the low and high ends give its pessimistic and optimistic figures. Drag one to see the plan and the options change.</p>
+    <div class="asm-list" id="sens-ctl"></div>
+  </section>
+
+  <section class="section card" aria-labelledby="ppf-h">
+    <div class="card-head">
+      <div>
+        <h2 id="ppf-h">Spending vs return</h2>
+        <p>The line is the best projected July net return for each amount spent, searching every plan the catalogue allows. A plan below it spends money another plan uses better.
+          On Our plan and Your plan markers the vertical line spans pessimistic to optimistic net; the three dots show pessimistic, central and optimistic estimates. The selected case is the larger dot.
+          Click the line to load that plan below. <a href="floor.html">Arrange machines on the floor and see the live estimate.</a></p>
+      </div>
+      <div class="seg" role="group" aria-label="Case to optimise for" id="scn">
+        <button type="button" data-s="0">Pessimistic</button><button type="button" data-s="1">Central</button><button type="button" data-s="2">Optimistic</button>
+      </div>
+    </div>
+    <svg class="chart" id="ppf" height="320" role="img" aria-label="Best July net return for each amount of budget spent, with our plan and your plan marked"></svg>
+    <div class="legend" style="margin-top:10px" id="ppf-legend"></div>
+  </section>
+
   <section class="section build" aria-labelledby="plan-h">
     <div class="card-head">
       <div>
         <h2 id="plan-h">Try your own plan</h2>
-        <p>Add or remove actions in the catalogue on the right, pick which machines move on the <a href="floor.html">floor plan</a>,
-          and drag the assumptions below. Everything on this page updates. Up to 3 action types.</p>
+        <p>Set quantities in the catalogue, or let the optimiser fill it for a budget. Pick which machines move on the <a href="floor.html">floor plan</a>.</p>
       </div>
-      <button class="btn" type="button" id="reset">Back to our plan</button>
+      <div class="opt-ctl">
+        <label class="field" for="cap">Budget <span class="money">$<input id="cap" type="number" min="0" max="100000" step="1000" inputmode="numeric"></span></label>
+        <button class="btn primary" type="button" id="auto">Find the best plan</button>
+        <button class="btn" type="button" id="reset">Back to our plan</button>
+        <button class="btn" type="button" id="share">Copy link</button>
+        <button class="btn" type="button" id="csv">Download CSV</button>
+      </div>
     </div>
+    <p class="small muted" id="auto-note" aria-live="polite"></p>
     <section class="stats" id="stats" aria-label="Budget summary"></section>
     <section class="budget" id="budget" aria-label="How the $100,000 splits"></section>
     <div class="grid-main">
       <div>
         <h3 class="chart-h" style="margin-bottom:8px">Funded, with the evidence</h3>
         <div id="cards"></div>
-        <h3 id="sens-h" class="chart-h" style="margin:32px 0 4px">What if the assumptions are wrong?</h3>
-        <div class="sens-ctl" id="sens-ctl"></div>
+        <h3 id="sens-h" class="chart-h" style="margin:32px 0 4px">Your plan's range</h3>
+        <p class="small muted" style="margin:0 0 8px">Every assumption at its low end, its central value, its high end.</p>
         <div class="card table-wrap"><table class="sens" id="sens"></table></div>
         <p class="note" id="sens-note"></p>
       </div>
       <aside class="card panel" aria-labelledby="cat-h">
         <h3 id="cat-h">Action catalogue</h3>
+        <p class="muted small" style="margin:4px 0 12px">Up to 3 action types.</p>
         <div class="actions-list" id="catalog"></div>
       </aside>
     </div>
-  </section>
-
-  <section class="section" aria-labelledby="no-h">
-    <h2 id="no-h">Considered and not funded</h2>
-    <div class="card table-wrap" style="padding:8px 8px 4px;margin-top:16px"><table id="no"></table></div>
   </section>
 </main>
 </body>

@@ -7,17 +7,18 @@
   const S = { a: 0, b: 5 };
   let D;
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("downtime.html", async () => {
     try { D = await C.load("downtime"); } catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     [S.a, S.b] = C.periodControl($("#period"), (a, b) => { S.a = a; S.b = b; render(); });
     render(); tables();
-    addEventListener("resize", charts);
-    addEventListener("themechange", charts);
+    C.listen(window, "resize", charts);
+    C.listen(window, "themechange", charts);
   });
 
   const inP = (m) => m.m >= S.a && m.m <= S.b;
   function render() {
-    $("#title").textContent = `Downtime, ${C.periodLabel(S.a, S.b)}`;
+    $("#title").textContent = `Downtime · ${C.periodLabel(S.a, S.b)}`;
     const ms = D.months.filter(inP), T = D.totals;
     const sum = (k) => ms.reduce((t, m) => t + m[k], 0);
     const share = sum("lost") / T.lostFault;   // the cruder valuations scaled to the period by the same share
@@ -75,6 +76,8 @@
       if (r.h % 6 === 0) g += `<text x="${x(r.h)}" y="${H - 8}">${r.h === 0 ? "12a" : r.h === 12 ? "12p" : r.h < 12 ? r.h + "a" : r.h - 12 + "p"}</text>`;
     });
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = g;
+    C.dataTable(svg, "hr-table", "Faults and theo lost by the local hour a fault opened", ["Hour opened", "Faults", "Mean wait, h", "Mean fix, h", "Theo lost"],
+      hs.map((r) => [`${String(r.h).padStart(2, "0")}:00`, C.int(r.faults), C.num(r.wait, 1), C.num(r.fix, 1), C.usd(r.lost)]));
     svg.onmousemove = (e) => {
       const t = e.target.closest("[data-h]"); if (!t) return C.tip(null);
       const r = hs[+t.dataset.h];

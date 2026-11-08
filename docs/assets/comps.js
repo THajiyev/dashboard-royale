@@ -7,16 +7,17 @@
   const S = { a: 0, b: 5 };
   let D;
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("comps.html", async () => {
     try { D = await C.load("comps"); } catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     [S.a, S.b] = C.periodControl($("#period"), (a, b) => { S.a = a; S.b = b; render(); });
     render(); tables();
-    addEventListener("resize", drawPrice); addEventListener("themechange", drawPrice);
+    C.listen(window, "resize", drawPrice); C.listen(window, "themechange", drawPrice);
   });
 
   const sum = (arr, k) => arr.reduce((t, x) => t + x[k], 0);
   function render() {
-    $("#title").textContent = `Comps, ${C.periodLabel(S.a, S.b)}`;
+    $("#title").textContent = `Comps · ${C.periodLabel(S.a, S.b)}`;
     const M = D.months.slice(S.a, S.b + 1), first = D.months[S.a], last = D.months[S.b];
     const cost = sum(M, "cost"), face = sum(M, "face"), theo = sum(M, "theo");
     const pre = D.months.slice(0, 4), post = D.months.slice(4);
@@ -54,6 +55,10 @@
     }
     g += `<line id="pr-x" y1="${P.t}" y2="${H - P.b}" stroke="var(--ink-3)" opacity="0"/>`;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = g;
+    C.dataTable(svg, "price-table", "Daily points per dollar by tier, within the selected period",
+      ["Date", "Base points per dollar", "Gold points per dollar", "Platinum points per dollar", "Redemptions", "Comp cost"],
+      days.map((r) => [C.date(r.d, { weekday: "short", month: "short", day: "numeric" }),
+        ...D.tiers.map((tr) => r[tr] == null ? "—" : C.num(r[tr], 2)), C.int(r.n), C.usd(r.cost)]));
     $("#price-legend").innerHTML = D.tiers.map((tr) => `<span><i style="background:var(${COL[tr]})"></i>${tr}</span>`).join("");
     svg.onmousemove = (e) => {
       const rc = svg.getBoundingClientRect(), px = ((e.clientX - rc.left) / rc.width) * W;

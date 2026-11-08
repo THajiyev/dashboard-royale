@@ -46,6 +46,7 @@
    */
   C.matrix = (svg, M, opt = {}) => {
     const v = M.vars, k = v.length, kind = opt.kind || "r", sym = opt.sym || "r";
+    const label = opt.displayName || ((name) => name);
     const W = svg.clientWidth || 800, narrow = W < 560;
     const labW = Math.min(narrow ? 112 : 190, Math.max(...v.map((s) => s.length)) * (narrow ? 5.8 : 6.6) + 12);
     const cell = Math.max(14, Math.min(58, Math.floor((W - labW - 8) / (k - 1))));
@@ -57,7 +58,7 @@
     for (let i = 1; i < k; i++) {
       const y = y0 + (i - 1) * cell;
       const bold = opt.focus && opt.focus.includes(v[i]);
-      g += `<text x="${x0 - 8}" y="${y + cell / 2 + 4}" text-anchor="end" style="font-family:var(--sans);font-size:${narrow ? 11 : 12}px;fill:${bold ? "var(--ink)" : "var(--ink-2)"};font-weight:${bold ? 500 : 400}">${C.esc(v[i])}</text>`;
+      g += `<text x="${x0 - 8}" y="${y + cell / 2 + 4}" text-anchor="end" style="font-family:var(--sans);font-size:${narrow ? 11 : 12}px;fill:${bold ? "var(--ink)" : "var(--ink-2)"};font-weight:${bold ? 500 : 400}">${C.esc(label(v[i]))}</text>`;
       for (let j = 0; j < i; j++) {
         const x = x0 + j * cell;
         let fill, txt = "", strong = false;
@@ -80,7 +81,7 @@
     for (let j = 0; j < k - 1; j++) {
       const x = x0 + j * cell + cell / 2;
       const bold = opt.focus && opt.focus.includes(v[j]);
-      g += `<text transform="translate(${x + 4},${yb}) rotate(-40)" text-anchor="end" style="font-family:var(--sans);font-size:${narrow ? 11 : 12}px;fill:${bold ? "var(--ink)" : "var(--ink-2)"};font-weight:${bold ? 500 : 400}">${C.esc(v[j])}</text>`;
+      g += `<text transform="translate(${x + 4},${yb}) rotate(-40)" text-anchor="end" style="font-family:var(--sans);font-size:${narrow ? 11 : 12}px;fill:${bold ? "var(--ink)" : "var(--ink-2)"};font-weight:${bold ? 500 : 400}">${C.esc(label(v[j]))}</text>`;
     }
     // the rotated labels hang below-left, so the box grows downward
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("height", H); svg.innerHTML = g;
@@ -90,10 +91,20 @@
       const rows = kind === "r"
         ? [[sym, M.r[i][j] == null ? "–" : M.r[i][j].toFixed(3)], ["p", C.pfmt(M.p[i][j])],
            ...(M.q ? [["q (Benjamini–Hochberg)", C.pfmt(M.q[i][j])]] : []), ...(M.n ? [["n", C.int(M.n[i][j])]] : [])]
-        : [[`${v[i]} vs ${v[j]}`, C.pct(M.diff[i][j], 1, true)], ["p (Tukey-adjusted)", C.pfmt(M.p[i][j])]];
-      C.tip(C.tipRows(`${C.esc(v[i])} × ${C.esc(v[j])}`, rows), e);
+        : [[`${label(v[i])} vs ${label(v[j])}`, C.pct(M.diff[i][j], 1, true)], ["p (Tukey-adjusted)", C.pfmt(M.p[i][j])]];
+      C.tip(C.tipRows(`${C.esc(label(v[i]))} × ${C.esc(label(v[j]))}`, rows), e);
     };
     svg.onmouseleave = () => C.tip(null);
+    const tableRows = [];
+    for (let i = 1; i < k; i++) for (let j = 0; j < i; j++) {
+      tableRows.push(kind === "r"
+        ? [C.esc(label(v[i])), C.esc(label(v[j])), M.r[i][j] == null ? "–" : C.num(M.r[i][j], opt.digits || 3),
+          C.pfmt(M.p[i][j]), ...(M.q ? [C.pfmt(M.q[i][j])] : []), ...(M.n ? [C.int(M.n[i][j])] : [])]
+        : [C.esc(label(v[i])), C.esc(label(v[j])), M.diff[i][j] == null ? "–" : C.pct(M.diff[i][j], 1, true), C.pfmt(M.p[i][j])]);
+    }
+    C.dataTable(svg, `${svg.id}-table`, kind === "r" ? `${sym} and p-values for each variable pair` : "Pairwise differences and Tukey-adjusted p-values",
+      kind === "r" ? ["Variable", "Compared with", sym, "p", ...(M.q ? ["q, adjusted"] : []), ...(M.n ? ["n"] : [])]
+        : ["Variable", "Compared with", "Difference", "Tukey-adjusted p"], tableRows);
   };
 
   /** Strongest significant pairs, for the table view under a matrix. */

@@ -7,8 +7,9 @@
   const DIM = { region: "Home region", age: "Age band", tier: "Tier" };
   let P;
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("players.html", async () => {
     try { P = await C.load("players"); } catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     try { S.seg = new URLSearchParams(location.search).get("group") || localStorage.getItem("ga-player-seg") || "all"; } catch { /* */ }
     $("#seg").innerHTML = `<option value="all">All players</option>` + Object.entries(P.groups).map(([d, vals]) =>
       `<optgroup label="${DIM[d]}">${vals.map((v) => `<option value="${d}:${v}">${v}</option>`).join("")}</optgroup>`).join("");
@@ -18,7 +19,7 @@
     $("#mdir").onclick = (e) => { const b = e.target.closest("button"); if (b) { S.dir = b.dataset.d; drawMoney(); } };
     $("#load-all").onclick = loadAll;
     render();
-    addEventListener("resize", drawCharts); addEventListener("themechange", drawCharts);
+    C.listen(window, "resize", drawCharts); C.listen(window, "themechange", drawCharts);
   });
 
   function setSeg(v) {
@@ -36,7 +37,7 @@
   const fmtShare = (f) => (f < 0.001 ? "0.1%" : f < 0.01 ? (f * 100).toFixed(1) + "%" : Math.round(f * 100) + "%");
 
   function render() {
-    $("#title").textContent = `Tracked players, ${C.periodLabel(S.a, S.b)}`;
+    $("#title").textContent = `Tracked players · ${C.periodLabel(S.a, S.b)}`;
     const s = cur();
     const net = s.po - s.ci;
     $("#stats").innerHTML = [
@@ -66,6 +67,8 @@
     for (const t of [0, 0.25, 0.5, 0.75, 1]) g += `<text x="${x(t)}" y="${H - 6}" text-anchor="middle">${t}</text>`;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = g;
     const s = cur();
+    C.dataTable(svg, `${sel.slice(1)}-table`, sel === "#hhit" ? "Win-rate p-value histogram by bin" : "Peer-based payout p-value histogram by bin",
+      ["p-value range", "Players", "Expected if fair"], counts.map((c, i) => [`${bins[i]} to ${bins[i + 1]}`, C.int(c), C.int(flat)]));
     if (sel === "#hhit") $("#hit-sub").textContent = `${C.pct(s.hitP05 / s.players, 1)} of players have p < 0.05 (fair play: 5%). ${s.hitFlag} flagged after correcting for ${C.int(s.players)} tests. The tall last bar is very short play, where an exact test can't give a small p.`;
     else $("#z-sub").textContent = `${C.pct(s.monP05 / s.players, 1)} have p < 0.05, as fair play gives. ${s.monFlag} flagged: a peer-based p can't go below 1 in the peer group, so it ranks players but can't single one out of ${C.int(s.players)}.`;
   }
@@ -90,6 +93,8 @@
       <text x="${x(0.1) + 8}" y="${y(s.lorLoss[i10]) + 14}" style="fill:var(--ink)">Top 10%: ${C.pct(s.top10, 0)} of losses</text>`;
     g += `<rect x="${P0.l}" y="${P0.t}" width="${W - P0.l - P0.r}" height="${H - P0.t - P0.b}" fill="transparent" id="lor-hit"/><g id="lor-dot"></g>`;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = g;
+    C.dataTable(svg, "lor-table", "Share of losses held by the biggest losers", ["Biggest losers", "Share of actual losses", "Share of expected losses (theo)"],
+      [0.01, 0.05, 0.1, 0.2, 0.3, 0.5, 0.75, 1].map((f) => { const i = Math.round(k * f); return [C.pct(f, 0), C.pct(s.lorLoss[i], 0), C.pct(s.lorTheo[i], 0)]; }));
     $("#lor-note").innerHTML = `The top 1% of losers account for <span class="mono">${C.pct(s.top1, 1)}</span> of all losses, the top 10% for
       <span class="mono">${C.pct(s.top10, 0)}</span>. Expected losses (theo) are even more concentrated, <span class="mono">${C.pct(s.top10Theo, 0)}</span> in the top 10%,
       because a few players simply play much more; luck spreads actual results out. ${C.usd(s.losses, { short: true })} lost by players who finished down,

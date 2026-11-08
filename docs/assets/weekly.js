@@ -7,16 +7,17 @@
   const FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   let calMode = "usd", acfMode = "raw";
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("weekly.html", async () => {
     let D;
     try { D = await C.load("weekly"); } catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     stats(D); table(D); tests(D);
     const draw = () => { cal(D); overlay(D); weekday(D); acf(D); spec(D); tukey(D); months(D); segments(D); trend(D); };
     draw();
     seg("#cal-mode", (m) => { calMode = m; cal(D); });
     seg("#acf-mode", (m) => { acfMode = m; acf(D); });
-    addEventListener("resize", draw);
-    addEventListener("themechange", draw);
+    C.listen(window, "resize", draw);
+    C.listen(window, "themechange", draw);
   });
 
   function seg(sel, on) {
@@ -80,6 +81,12 @@
       return C.tipRows(C.date(d.d, { weekday: "short", month: "short", day: "numeric" }), [["Theo", C.usd(d.theo)],
         ["Against its week's average", C.pct(d.theo / wkMean[w] - 1, 1, true)], ...(d.ev ? [["Event", C.esc(d.ev)]] : []), ...(d.clo ? [["", "Walkway closed"]] : [])]);
     });
+    C.dataTable(svg, "cal-table", "Daily theo and event context shown in the calendar", ["Date", "Weekday", "Theo", "Against week's average", "Event", "Walkway closed"],
+      D.days.map((d, i) => {
+        const w = Math.floor((i + off) / 7);
+        return [C.date(d.d, { weekday: "short", month: "short", day: "numeric" }), FULL[d.dow], C.usd(d.theo),
+          C.pct(d.theo / wkMean[w] - 1, 1, true), d.ev ? C.esc(d.ev) : "—", d.clo ? "Yes" : "No"];
+      }));
     $("#cal-legend").innerHTML = calMode === "usd"
       ? `<span class="scale">${C.usd(lo, { short: true })}<span class="ramp" style="background:${C.gradient(C.SEQ)}"></span>${C.usd(hi, { short: true })}</span><span><i class="ring"></i>Event day</span>`
       : `<span class="scale">−40%<span class="ramp" style="background:${C.gradient(C.DIV)}"></span>+40% vs the week's average day</span><span><i class="ring"></i>Event day</span>`;
@@ -106,6 +113,9 @@
       return C.tipRows(`Week of ${C.date(w.wk)}`, [["Total theo", C.usd(w.total)], ["Correlation with the average week", w.r.toFixed(3)],
         ["Saturday ÷ Tuesday", (w.prof[5] / w.prof[1]).toFixed(2)], ...(w.ev.length ? [["Events", C.esc(w.ev.join(", "))]] : []), ...(w.clo ? [["", "Walkway closed part of the week"]] : [])]);
     });
+    C.dataTable(svg, "ov-table", "Daily profile indices for each complete week", ["Week of", ...FULL, "Total theo", "Correlation with average", "Events", "Walkway closed"],
+      D.weeks.map((w) => [C.date(w.wk), ...w.prof.map((v) => C.num(v, 3)), C.usd(w.total), C.num(w.r, 3),
+        w.ev.length ? C.esc(w.ev.join(", ")) : "—", w.clo ? "Yes" : "No"]));
   }
 
   // ----------------------------------------------------------------- weekday levels by half
@@ -155,6 +165,8 @@
     });
     size(svg, W, H); svg.innerHTML = g;
     hover(svg, (k) => C.tipRows(`Lag ${+k + 1} days`, [["Autocorrelation", a[+k].toFixed(3)], ["Noise band", `± ${D.acf.band.toFixed(3)}`]]));
+    C.dataTable(svg, "acf-table", "Autocorrelation by lag for raw and weekday-adjusted theo", ["Lag, days", "Raw", "Weekday-adjusted", "Noise band"],
+      D.acf.raw.map((v, i) => [i + 1, C.num(v, 3), C.num(D.acf.resid[i], 3), `± ${C.num(D.acf.band, 3)}`]));
     const L = D.acf.lb;
     $("#acf-note").innerHTML = acfMode === "raw"
       ? `Days 7, 14, 21 and 28 apart correlate at ${D.acf.weekly_raw.map((v) => v.toFixed(2)).join(", ")}. Ljung–Box test up to lag 7: Q = ${L.Q7}, p ${C.peq(L.raw7)}.`
@@ -178,6 +190,8 @@
     cpw.forEach((c, i) => { g += `<rect x="${x(c) - bw / 2}" y="${P.t}" width="${bw}" height="${H - P.t - P.b}" fill="transparent" data-k="${i}"/>`; });
     size(svg, W, H); svg.innerHTML = g;
     hover(svg, (k) => C.tipRows(`Cycle of ${(1 / S.f[+k]).toFixed(1)} days`, [["Share of variation", C.pct(sh[+k], 1)]]));
+    C.dataTable(svg, "sp-table", "Periodogram power by cycle length", ["Cycle length, days", "Frequency", "Share of variation"],
+      S.f.map((f, i) => [C.num(1 / f, 2), C.num(f, 5), C.pct(sh[i], 2)]));
     $("#sp-note").innerHTML = `Fisher's g test for a dominant cycle: g = ${S.fisher_g}, p ${C.peq(S.fisher_p)}. The 7-day cycle and its harmonics (3.5 and 2.3 days) together carry ${C.pct(S.share_weekly, 0)}.`;
   }
 
@@ -209,6 +223,10 @@
     DAYS.forEach((_, k) => { g += `<rect x="${x(k) - (W - P.l - P.r) / 14}" y="${P.t}" width="${(W - P.l - P.r) / 7}" height="${H - P.t - P.b}" fill="transparent" data-k="${k}"/>`; });
     size(svg, W, H); svg.innerHTML = g;
     hover(svg, (k) => C.tipRows(FULL[+k], [["Locals", S.locals.idx[+k].toFixed(3)], ["Visitors and uncarded", S.nonlocals.idx[+k].toFixed(3)]]));
+    C.dataTable(svg, "sg-table", "Weekday indices and intervals for locals and visitors", ["Weekday", "Locals", "Locals 95% low", "Locals 95% high",
+      "Visitors and uncarded", "Visitors 95% low", "Visitors 95% high"],
+      DAYS.map((d, k) => [d, C.num(S.locals.idx[k], 3), C.num(S.locals.lo[k], 3), C.num(S.locals.hi[k], 3),
+        C.num(S.nonlocals.idx[k], 3), C.num(S.nonlocals.lo[k], 3), C.num(S.nonlocals.hi[k], 3)]));
     $("#sg-note").innerHTML = `Friday–Saturday over Monday–Thursday: locals ${C.pct(S.locals.weekend_uplift, 0, true)}, visitors ${C.pct(S.nonlocals.weekend_uplift, 0, true)}. Same shape for both? Segment × weekday interaction, F = ${S.test.F}, p ${C.peq(S.test.p)}: no. Locals are ${C.pct(S.locals.share, 0)} of ordinary-day theo.`;
   }
 
@@ -235,6 +253,15 @@
     size(svg, W, H); svg.innerHTML = g;
     hover(svg, (k) => { const w = D.weeks[+k]; return C.tipRows(`Week of ${C.date(w.wk)}`, [["Total theo", C.usd(w.total)], ...(w.ev.length ? [["Events", C.esc(w.ev.join(", "))]] : [])]); });
     const A = D.trend.JanApr, B = D.trend.MayJun;
+    const fit = (T, wk) => {
+      if (wk < T.start || wk > T.end) return "—";
+      const start = new Date(T.start + "T12:00:00");
+      const date = new Date(wk + "T12:00:00");
+      return C.usd(Math.exp(T.a + T.b * ((date - start) / 864e5 / 7)));
+    };
+    C.dataTable(svg, "tr-table", "Weekly theo totals and fitted trends", ["Week of", "Theo", "Jan–Apr fitted", "May–Jun fitted", "Events", "Walkway closed"],
+      D.weeks.map((w) => [C.date(w.wk), C.usd(w.total), fit(A, w.wk), fit(B, w.wk),
+        w.ev.length ? C.esc(w.ev.join(", ")) : "—", w.clo ? "Yes" : "No"]));
     $("#tr-note").innerHTML = `Jan–Apr: ${C.pct(A.slope, 2, true)} a week (95% CI ${C.pct(A.lo, 2, true)} to ${C.pct(A.hi, 2, true)}, p ${C.peq(A.p)}). May–Jun: ${C.pct(B.slope, 2, true)} a week (${C.pct(B.lo, 2, true)} to ${C.pct(B.hi, 2, true)}, p ${C.peq(B.p)}). Log-linear fit with Newey–West errors; ${A.n} and ${B.n} ordinary weeks.`;
   }
 

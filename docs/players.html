@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gilded Ace Players</title>
+<title>Casino Manager | Players</title>
 <meta name="description" content="What tracked players wagered, got back and netted, how concentrated the results are, and how each player's result compares with what the games' odds predict.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Gilded Ace Players">
+<meta property="og:title" content="Casino Manager | Players">
 <meta property="og:description" content="What tracked players wagered, got back and netted, how concentrated the results are, and how each player's result compares with what the games' odds predict.">
 <meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=optional" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <script defer src="assets/core.js"></script>
 <script defer src="assets/players.js"></script>
@@ -21,9 +21,12 @@
 <main class="page" id="main">
   <div class="page-head">
     <div>
+      <p class="qa-q">What did tracked players wager, get back and net, and how concentrated are those results?</p>
       <h1 id="title">Tracked players</h1>
-      <p>Loyalty-card play only, about two thirds of all coin-in (66%, Jan–Jun). For every player, expected payout is what the games' configured odds
-        return on what they wagered; luck is what they actually got back minus that. Shown to describe outcomes, not to target anyone.</p>
+      <p>“Tracked” means player IDs already present in the supplied synthetic loyalty-card session data; this dashboard does not select who is tracked.
+        The summaries include carded play only, about two thirds of all coin-in (66%, Jan–Jun), and the full Jan–Jun list loads below on request.
+        For every player, expected payout is what the games' configured odds return on what they wagered; luck is what they actually got back minus that.
+        Shown to describe outcomes, not to target anyone.</p>
     </div>
     <div class="controls">
       <label class="field">Group <select id="seg" aria-label="Guest group"></select></label>

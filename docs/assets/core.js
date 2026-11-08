@@ -6,6 +6,9 @@
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
   C.MONTHS = MONTHS;
   C.BUDGET = 100000;
+  // Banks whose fitted "location" effect belongs to their machines, not the spot: B-51 holds the 8 machines
+  // installed Mar 24, so its effect is mostly novelty. Move optimizers leave these out (floor.js, moves.js).
+  C.NOT_A_SPOT = ["B-51"];
 
   // ------------------------------------------------------------- data
   const cache = {};
@@ -115,6 +118,30 @@
 
   // ------------------------------------------------------------- period (shared across pages)
   const PKEY = "ga-period";
+  let pageController = null;
+  const pageInitializers = new Map();
+  const loadedPageScripts = new Set();
+  const pageScriptLoads = new Map();
+  let navigationId = 0;
+  C.registerPage = (page, initialize) => pageInitializers.set(page, initialize);
+  C.pageActive = () => !!pageController && !pageController.signal.aborted;
+  C.listen = (target, type, listener, options = {}) => {
+    if (!pageController) return target.addEventListener(type, listener, options);
+    target.addEventListener(type, listener, { ...options, signal: pageController.signal });
+  };
+  C.stopPage = () => {
+    pageController?.abort();
+    pageController = null;
+  };
+  C.startPage = async () => {
+    C.stopPage();
+    pageController = new AbortController();
+    C.question();
+    C.toc();
+    const here = location.pathname.split("/").pop() || "index.html";
+    const initialize = pageInitializers.get(here);
+    if (initialize) await initialize();
+  };
   C.getPeriod = () => {
     const q = new URLSearchParams(location.search);
     let a = MONTHS.indexOf(q.get("from")), b = MONTHS.indexOf(q.get("to"));
@@ -129,7 +156,7 @@
     const u = new URL(location.href);
     u.searchParams.set("from", MONTHS[a]); u.searchParams.set("to", MONTHS[b]);
     history.replaceState(null, "", u);
-    C.$$(".nav a").forEach((el) => { const h = new URL(el.href); h.search = u.search; el.href = h; });
+    C.updateNavigation();
   };
   C.periodLabel = (a, b) => (a === b ? `${MONTHS[a]} 2025` : `${MONTHS[a]}–${MONTHS[b]} 2025`);
   /** Renders From/To selects into `el`; calls onChange(a, b). */
@@ -191,31 +218,38 @@
   C.savePlan = (p) => { try { localStorage.setItem(PLAN, JSON.stringify(p)); } catch { /* storage off */ } };
 
   // ------------------------------------------------------------- shell
-  // The nav is the GUIDE's six questions, one page each, then a Methods menu with the supporting analysis.
+  // The nav is the GUIDE's six questions, followed by methods and related exploratory tools.
   // The brand links home to the summary (index.html).
   const PAGES = [
     ["machines.html", "Machines"], ["forecast.html", "Demand"], ["downtime.html", "Downtime"],
     ["players.html", "Players"], ["comps.html", "Comps"], ["actions.html", "Actions"],
   ];
-  const METHODS = [
-    ["evidence.html", "Evidence"], ["floor.html", "Floor plan"], ["weekly.html", "Weekly cycle"], ["models.html", "Models"],
-    ["correlations.html", "Correlations"], ["context.html", "Context"], ["streaks.html", "Streaks"],
+  const METHODS = [["evidence.html", "Evidence"], ["models.html", "Models"]];
+  const EXPLORE = [
+    ["floor.html", "Floor plan"], ["weekly.html", "Weekly cycle"], ["correlations.html", "Correlations"],
+    ["context.html", "Context"], ["streaks.html", "Player streaks"],
   ];
   // One entry per GUIDE question: the question verbatim, a one-line answer, and the claims behind it
   // (Evidence page, recomputed from raw data by scripts/reproduce_claims.py).
   C.QUESTIONS = [
     { n: 1, page: "machines.html", q: "Which machines are truly underperforming once you account for exposure, availability and luck?",
-      a: "Not the bottom 10: they're low because of their spot and games. Only M-1158 looks faulty.", claims: ["C1", "C2", "C3", "C4"] },
+      a: "Not the bottom 10: they're low because of their spot and games. One machine, M-1158, is flagged for inspection.", claims: ["C1", "C2", "C3", "C4"],
+      tools: [["floor.html", "Explore the floor plan"], ["correlations.html", "Compare machine patterns"]] },
     { n: 2, page: "forecast.html", q: "What changed in demand across the floor over the six months, and why?",
-      a: "A steady weekly cycle, lifted by events; June fell 6.5% as fewer visitors came.", claims: ["C5", "C6", "C7", "C8", "C9"] },
+      a: "A steady weekly cycle, lifted by events. June fell 6.5% while city visitation was lower; we haven't shown one caused the other.", claims: ["C5", "C6", "C7", "C8", "C9"],
+      tools: [["weekly.html", "Explore the weekly cycle"], ["context.html", "Check events and access"], ["correlations.html", "Compare daily patterns"]] },
     { n: 3, page: "downtime.html", q: "How much play was lost to downtime, and when?",
-      a: "$90–113K of theo, mostly on the swing shift and on Ridgeline machines.", claims: ["C10", "C11", "C12"] },
+      a: "$90–113K of theo, mostly on the swing shift and on Ridgeline machines.", claims: ["C10", "C11", "C12"],
+      tools: [["correlations.html", "Compare downtime with daily floor metrics"]] },
     { n: 4, page: "players.html", q: "What did tracked players wager, get back and net, and how concentrated are those results?",
-      a: "$163.8M wagered, 90.5% paid back, −$15.6M net; the top 10% of losers hold 53% of losses.", claims: ["C13", "C14"] },
+      a: "$163.8M wagered, 90.5% paid back, −$15.6M net; the top 10% of losers hold 53% of losses.", claims: ["C13", "C14"],
+      tools: [["streaks.html", "Test whether past results predict the next visit"], ["correlations.html", "Compare player patterns"]] },
     { n: 5, page: "comps.html", q: "What did the loyalty (comp) program cost, and did anything about it change?",
-      a: "$191K in six months. On May 1 comps got half as cheap in points: cost rose 9%, play didn't.", claims: ["C15", "C16", "C17", "C18"] },
+      a: "$191K in six months. On May 1 comps got half as cheap in points: cost rose 9%, play didn't.", claims: ["C15", "C16", "C17", "C18"],
+      tools: [["correlations.html", "Compare comps with other daily metrics"]] },
     { n: 6, page: "actions.html", q: "Which actions would you fund with $100,000, and how would you know they worked?",
-      a: "Move 24 machines to better spots, sign Back Forty, inspect M-1158: $51,900.", claims: ["C19", "C20"] },
+      a: "Two promotion weekends, 6 machine moves and Back Forty signs: $48,300, about +$91K net in July (−$7K to +$209K).", claims: ["C19", "C20", "C21"],
+      tools: [["floor.html", "Arrange machines and see the live estimate"], ["context.html", "Review measured effects of events and access"]] },
   ];
   const ICON = {
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
@@ -225,25 +259,23 @@
     arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   };
   C.icon = (n, s = 16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
+  const navGroup = (id, label, items) => `<div class="nav-more">
+    <button type="button" class="nav-more-btn" id="nav-${id}" aria-expanded="false" aria-controls="${id}-list">${label}
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <div class="nav-more-list" id="${id}-list">${items.map(([h, t]) => `<a href="${h}">${t}</a>`).join("")}</div>
+  </div>`;
 
   C.shell = () => {
-    const here = location.pathname.split("/").pop() || "index.html";
     const bar = document.createElement("header");
     bar.className = "topbar";
     bar.innerHTML = `<div class="topbar-in">
-      <a class="brand" href="index.html${location.search}" aria-label="Gilded Ace floor review, home">
-        <svg class="brand-mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="9" width="18" height="2" rx="1" fill="currentColor" opacity=".35"/><rect x="6" y="7" width="7" height="6" rx="3" fill="currentColor" opacity=".45"/><circle cx="12" cy="10" r="3" fill="currentColor"/></svg>
-        Gilded Ace <small>floor review</small></a>
-      <button class="menu-btn" id="menu" type="button" aria-expanded="false" aria-controls="pages">${(PAGES.concat(METHODS).find(([h]) => h === here) || ["", "Menu"])[1]}
+      <a class="brand" href="index.html${location.search}" aria-label="Home">
+        <img class="brand-logo" src="assets/logo.png" alt=""></a>
+      <button class="menu-btn" id="menu" type="button" aria-expanded="false" aria-controls="pages">Menu
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <nav class="nav" id="pages" aria-label="Pages">${PAGES.map(([h, t]) =>
-        `<a href="${h}${location.search}" ${h === here ? 'aria-current="page"' : ""}>${t}</a>`).join("")}
-        <div class="nav-more">
-          <button type="button" class="nav-more-btn" id="more" aria-expanded="false" aria-controls="more-list" ${METHODS.some(([h]) => h === here) ? 'aria-current="page"' : ""}>Methods
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-          <div class="nav-more-list" id="more-list">${METHODS.map(([h, t]) =>
-            `<a href="${h}${location.search}" ${h === here ? 'aria-current="page"' : ""}>${t}</a>`).join("")}</div>
-        </div></nav>
+        `<a href="${h}">${t}</a>`).join("")}
+        ${navGroup("methods", "Methods", METHODS)}${navGroup("explore", "Explore", EXPLORE)}</nav>
       <button class="theme-btn" id="theme" type="button" aria-label="Switch colour theme"></button></div>`;
     document.body.prepend(bar);
     const skip = Object.assign(document.createElement("a"), { className: "skip", href: "#main", textContent: "Skip to content" });
@@ -253,12 +285,30 @@
     setMenu(false);
     menu.onclick = () => setMenu(!bar.classList.contains("open"));
     // Methods dropdown: opens on click, closes on Escape, on a click elsewhere, or when focus leaves it
-    const more = C.$("#more"), wrap = more.parentElement;
-    const setMore = (open) => { wrap.classList.toggle("open", open); more.setAttribute("aria-expanded", String(open)); };
-    more.onclick = (e) => { e.stopPropagation(); setMore(!wrap.classList.contains("open")); };
-    document.addEventListener("click", (e) => { if (!wrap.contains(e.target)) setMore(false); });
-    wrap.addEventListener("focusout", (e) => { if (!wrap.contains(e.relatedTarget)) setMore(false); });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && wrap.classList.contains("open")) { setMore(false); more.focus(); } });
+    const groups = C.$$(".nav-more", bar);
+    groups.forEach((wrap) => {
+      const button = C.$(".nav-more-btn", wrap);
+      const setOpen = (open) => { wrap.classList.toggle("open", open); button.setAttribute("aria-expanded", String(open)); };
+      button.onclick = (e) => {
+        e.stopPropagation();
+        const open = !wrap.classList.contains("open");
+        groups.forEach((group) => {
+          const other = C.$(".nav-more-btn", group);
+          group.classList.toggle("open", open && group === wrap);
+          other.setAttribute("aria-expanded", String(open && group === wrap));
+        });
+      };
+      wrap.addEventListener("focusout", (e) => { if (!wrap.contains(e.relatedTarget)) setOpen(false); });
+      wrap.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && wrap.classList.contains("open")) { setOpen(false); button.focus(); }
+      });
+    });
+    document.addEventListener("click", (e) => groups.forEach((wrap) => {
+      if (!wrap.contains(e.target)) {
+        wrap.classList.remove("open");
+        C.$(".nav-more-btn", wrap).setAttribute("aria-expanded", "false");
+      }
+    }));
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && bar.classList.contains("open")) { setMenu(false); menu.focus(); } });
     document.addEventListener("click", (e) => { if (!bar.contains(e.target)) setMenu(false); });
     const foot = document.createElement("footer");
@@ -278,6 +328,115 @@
       try { localStorage.setItem("ga-theme", t); } catch { /* */ }
       paint(); window.dispatchEvent(new Event("themechange"));
     };
+    C.updateNavigation();
+    C.installNavigation();
+  };
+  C.updateNavigation = () => {
+    const here = location.pathname.split("/").pop() || "index.html";
+    const nav = C.$("#pages"), bar = C.$(".topbar");
+    const u = new URL(location.href);
+    if (!nav || !bar) return;
+    C.$$(".nav a", nav).forEach((link) => {
+      const target = new URL(link.href, location.href);
+      target.search = u.search;
+      link.href = target;
+      if (target.pathname.split("/").pop() === here) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
+    });
+    const home = C.$(".brand", bar);
+    if (home) {
+      const target = new URL("index.html", location.href);
+      target.search = u.search;
+      home.href = target;
+    }
+    C.$$(".nav-more", bar).forEach((group) => {
+      const button = C.$(".nav-more-btn", group);
+      const active = C.$$(".nav-more-list a", group).some((link) => new URL(link.href, location.href).pathname.split("/").pop() === here);
+      if (active) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+      group.classList.remove("open");
+      button.setAttribute("aria-expanded", "false");
+    });
+    const menu = C.$("#menu", bar);
+    if (menu) {
+      bar.classList.remove("open");
+      menu.setAttribute("aria-expanded", "false");
+      menu.setAttribute("aria-label", "Open the page menu");
+    }
+  };
+  C.installNavigation = () => {
+    if (C.navigationInstalled) return;
+    C.navigationInstalled = true;
+    document.addEventListener("click", async (event) => {
+      const link = event.target.closest("a[href]");
+      if (!link || event.defaultPrevented || event.button !== 0 ||
+          event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ||
+          link.target || link.hasAttribute("download")) return;
+      const target = new URL(link.href, location.href);
+      if (!["http:", "https:"].includes(target.protocol) || target.origin !== location.origin ||
+          target.pathname.slice(0, target.pathname.lastIndexOf("/") + 1) !== location.pathname.slice(0, location.pathname.lastIndexOf("/") + 1) ||
+          target.pathname === location.pathname ||
+          !target.pathname.endsWith(".html")) return;
+      event.preventDefault();
+      await C.navigate(target);
+    });
+    window.addEventListener("popstate", () => C.navigate(new URL(location.href), { history: false }));
+  };
+  C.loadPageScripts = async (doc, target) => {
+    const scripts = [...doc.querySelectorAll("script[src]")].map((s) => new URL(s.getAttribute("src"), target).href)
+      .filter((src) => new URL(src).pathname !== new URL("assets/core.js", target).pathname);
+    for (const src of scripts) {
+      if (loadedPageScripts.has(src)) continue;
+      let loading = pageScriptLoads.get(src);
+      if (!loading) {
+        loading = new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = src;
+          script.async = false;
+          script.onload = () => { loadedPageScripts.add(src); resolve(); };
+          script.onerror = () => reject(new Error(`Could not load page script: ${src}`));
+          document.head.append(script);
+        });
+        pageScriptLoads.set(src, loading);
+      }
+      await loading;
+    }
+  };
+  C.navigate = async (target, options = {}) => {
+    const id = ++navigationId;
+    C.stopPage();
+    const main = C.$("#main");
+    if (!main) return location.assign(target.href);
+    main.setAttribute("aria-busy", "true");
+    try {
+      const response = await fetch(target.href);
+      if (!response.ok) throw new Error(`Page request failed with status ${response.status}`);
+      const doc = new DOMParser().parseFromString(await response.text(), "text/html");
+      const nextMain = doc.querySelector("#main");
+      if (!nextMain) throw new Error("The requested page has no main content");
+      await C.loadPageScripts(doc, target);
+      if (id !== navigationId) return;
+      if (options.history !== false) history.pushState(null, "", target.href);
+      window.scrollTo(0, 0);
+      main.replaceWith(nextMain);
+      document.title = doc.title;
+      for (const selector of ['meta[name="description"]', 'meta[property="og:title"]', 'meta[property="og:description"]']) {
+        const source = doc.querySelector(selector);
+        if (source) C.$(selector)?.setAttribute("content", source.content);
+      }
+      C.updateNavigation();
+      await C.startPage();
+      if (id === navigationId) {
+        C.$("#main")?.removeAttribute("aria-busy");
+        C.$("#main")?.setAttribute("tabindex", "-1");
+        C.$("#main")?.focus({ preventScroll: true });
+        if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+      }
+    } catch (error) {
+      if (id !== navigationId) return;
+      console.error("Page navigation failed; loading the linked page normally.", error);
+      location.assign(target.href);
+    }
   };
 
   // ------------------------------------------------------------- on this page
@@ -289,7 +448,7 @@
     "comps.html": [["price-h", "Comp prices"], ["may-h", "May 1"], ["ba-h", "Before and after"], ["tier-h", "Tiers"], ["mon-h", "Month by month"], ["know-h", "The answer"], ["test-h", "Pilot"]],
     "forecast.html": [["fc-h", "Daily forecast"], ["dec-h", "What it changes"], ["seg-h", "June shortfall"], ["jul-h", "July baseline"], ["meas-h", "Measuring an action"]],
     "downtime.html": [["mon-h", "By month"], ["hr-h", "By hour"], ["sh-h", "By shift"], ["mk-h", "By maker"], ["zn-h", "By zone"], ["fix-h", "What would fix it"]],
-    "actions.html": [["rec-h", "Our plan"], ["plan-h", "Try your own"], ["no-h", "Not funded"]],
+    "actions.html": [["rec-h", "Our plan"], ["ben-h", "Other options"], ["asm-h", "Assumptions"], ["ppf-h", "Spending vs return"], ["plan-h", "Try your own"]],
     "evidence.html": [["rep-h", "Reproduce"], ["q1-h", "1 Machines"], ["q2-h", "2 Demand"], ["q3-h", "3 Downtime"], ["q4-h", "4 Players"], ["q5-h", "5 Comps"], ["q6-h", "6 Actions"]],
     "models.html": [["proto-h", "The test"], ["forest-h", "All models"], ["tab-h", "Scores"], ["it-h", "Six rounds"], ["floor-h", "Noise floor"], ["p2-h", "Classical and ML"], ["mm-h", "Machine model"], ["iv-h", "Impact estimator"]],
     "weekly.html": [["cal-h", "Calendar"], ["ov-h", "Week shapes"], ["wdt-h", "By weekday"], ["acf-h", "Autocorrelation"], ["tk-h", "Pairwise tests"], ["sg-h", "Locals vs visitors"], ["tr-h", "Trend"], ["tests-h", "All tests"]],
@@ -326,7 +485,7 @@
       });
       nav.classList.toggle("stuck", nav.getBoundingClientRect().top <= 57);
     };
-    addEventListener("scroll", spy, { passive: true }); addEventListener("resize", spy); spy();
+    C.listen(window, "scroll", spy, { passive: true }); C.listen(window, "resize", spy); spy();
   };
 
   // ------------------------------------------------------------- question pages
@@ -338,15 +497,44 @@
     const Q = C.QUESTIONS.find((x) => x.page === here), main = C.$("#main");
     if (!Q || !main) return;
     const head = C.$(".page-head > div", main);
-    const p = document.createElement("p");
-    p.className = "qa-q"; p.textContent = Q.q;
-    head?.prepend(p);
+    let p = head?.querySelector(".qa-q");
+    if (!p) {
+      p = document.createElement("p");
+      p.className = "qa-q";
+      head?.prepend(p);
+    }
+    p.textContent = Q.q;
+    if (Q.tools?.length) {
+      const related = document.createElement("nav");
+      related.className = "related-tools";
+      related.setAttribute("aria-label", "Related analysis");
+      related.innerHTML = `<span>Related analysis</span>${Q.tools.map(([href, label]) =>
+        `<a href="${href}${location.search}">${C.esc(label)}</a>`).join("")}`;
+      C.$(".page-head", main)?.after(related);
+    }
     const next = C.QUESTIONS.find((x) => x.n === Q.n + 1);
     const foot = document.createElement("nav");
     foot.className = "qa-next"; foot.setAttribute("aria-label", "Next question");
     foot.innerHTML = next ? `<a href="${next.page}${location.search}">Next: ${C.esc(next.q)} ${C.icon("arrow")}</a>`
       : `<a href="evidence.html${location.search}">Check the claims ${C.icon("arrow")}</a>`;
     main.append(foot);
+  };
+
+  // ------------------------------------------------------------- chart data as a table
+  // For a chart whose numbers aren't in a table elsewhere on the page: a collapsed table right after it, so screen
+  // reader and keyboard users get the same data. Re-rendering keeps it open if it was open.
+  C.dataTable = (after, id, caption, head, rows) => {
+    if (!after) return;
+    // a column is right-aligned when every cell in it reads as a number ($, %, signs, digits)
+    const num = (i) => rows.length > 0 && rows.every((r) => /^[−+\-$]?[$\d]/.test(String(r[i] ?? "").trim()));
+    let d = document.getElementById(id);
+    if (!d) {
+      d = Object.assign(document.createElement("details"), { id, className: "data-table" });
+      after.after(d);
+    }
+    d.innerHTML = `<summary>Show the data as a table</summary><div class="table-wrap"><table><caption class="sr">${C.esc(caption)}</caption>
+      <thead><tr>${head.map((h, i) => `<th${num(i) ? ' class="num"' : ""}>${h}</th>`).join("")}</tr></thead>
+      <tbody>${rows.map((r) => `<tr>${r.map((c, i) => `<td${num(i) ? ' class="num"' : ""}>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
   };
 
   C.fail = (el, err) => {
@@ -361,5 +549,9 @@
   C.scale = (d0, d1, r0, r1) => (v) => r0 + ((v - d0) / (d1 - d0 || 1)) * (r1 - r0);
   C.niceMax = (v) => { const p = Math.pow(10, Math.floor(Math.log10(v))); return Math.ceil(v / p) * p; };
 
-  document.addEventListener("DOMContentLoaded", () => { C.shell(); C.question(); C.toc(); });
+  document.addEventListener("DOMContentLoaded", async () => {
+    document.querySelectorAll('script[src]').forEach((script) => loadedPageScripts.add(script.src));
+    C.shell();
+    await C.startPage();
+  });
 })();

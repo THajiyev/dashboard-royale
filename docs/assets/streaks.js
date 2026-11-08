@@ -4,12 +4,13 @@
   "use strict";
   const C = window.Core, $ = C.$;
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("streaks.html", async () => {
     let D;
     try { D = await C.load("streaks"); } catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     const draw = () => { streakChart(D); halvesChart(D); swingChart(D); edgeChart(D); };
     stats(D); draw(); tables(D); why(D); tests(D);
-    addEventListener("resize", draw); addEventListener("themechange", draw);
+    C.listen(window, "resize", draw); C.listen(window, "themechange", draw);
   });
 
   const pt = (v, d = 1) => `${C.num(v * 100, d, true)} pts`;
@@ -62,6 +63,11 @@
     hover(svg, rows, (r) => C.tipRows(`${Math.abs(r.streak)}${r.streak === -6 || r.streak === 3 ? " or more" : ""} ${r.streak < 0 ? "losing" : "winning"} visit${Math.abs(r.streak) === 1 ? "" : "s"} in a row`, [
       ["Next visit ended ahead", C.pct(r.ahead, 1)], ["95% interval", `${C.pct(r.lo, 1)} to ${C.pct(r.hi, 1)}`],
       ["Random order", `${C.pct(r.shuf, 1)} (${C.pct(r.shuf_lo, 1)} to ${C.pct(r.shuf_hi, 1)})`], ["Visits", C.int(r.n)]]));
+    C.dataTable(svg, "st-table", "Next-visit outcomes by preceding streak, with shuffled comparison", ["Prior streak", "Ahead next visit", "95% low", "95% high",
+      "Shuffled", "Shuffled 95% low", "Shuffled 95% high", "Visit pairs"],
+      rows.map((r) => [`${Math.abs(r.streak)}${r.streak === -6 || r.streak === 3 ? "+" : ""} ${r.streak < 0 ? "losses" : "wins"}`,
+        C.pct(r.ahead, 1), C.pct(r.lo, 1), C.pct(r.hi, 1), C.pct(r.shuf, 1), C.pct(r.shuf_lo, 1), C.pct(r.shuf_hi, 1), C.int(r.n)])
+        .concat([["All visits", C.pct(D.ahead_rate, 1), "—", "—", "—", "—", "—", C.int(D.visits)]]));
     const n = D.next;
     $("#st-note").innerHTML = `After a losing visit, <span class="mono">${C.pct(n.after_loss, 1)}</span> of next visits ended ahead; after a winning one,
       <span class="mono">${C.pct(n.after_win, 1)}</span>. With the same visits in random order that gap stays between
@@ -92,6 +98,10 @@
       ["Jan–Mar luck (average)", C.num(r.z1, 2, true)], ["Apr–Jun luck (average)", C.num(r.z2, 2, true)],
       ["95% interval", `${C.num(r.z2_lo, 2, true)} to ${C.num(r.z2_hi, 2, true)}`], ["Apr–Jun luck (median)", C.num(r.z2_median, 2, true)],
       ["Ended Apr–Jun ahead", C.pct(r.ahead2, 1)], ["Players", C.int(r.n)]]));
+    C.dataTable(svg, "hv-table", "Average and median luck by Jan–Mar luck tenth", ["Tenth", "Jan–Mar average z", "Apr–Jun average z",
+      "95% low", "95% high", "Apr–Jun median z", "Ended ahead", "Players"],
+      rows.map((r) => [r.decile, C.num(r.z1, 2, true), C.num(r.z2, 2, true), C.num(r.z2_lo, 2, true), C.num(r.z2_hi, 2, true),
+        C.num(r.z2_median, 2, true), C.pct(r.ahead2, 1), C.int(r.n)]));
     const meds = rows.map((r) => r.z2_median);
     $("#hv-note").innerHTML = `Slope <span class="mono">${C.num(h.slope, 3, true)}</span> (95% CI <span class="mono">${C.num(h.slope_lo, 3, true)}</span> to
       <span class="mono">${C.num(h.slope_hi, 3, true)}</span>); evening out would be <span class="mono">−1</span>. The unluckiest tenth's high average
@@ -119,6 +129,9 @@
     hover(svg, rows, (r) => C.tipRows(`Tenth ${r.decile} by swing size`, [
       ["Jan–Mar swing (1 sd, median)", C.usd(r.sd1)], ["Apr–Jun luck size, median", C.usd(r.abs_luck2_med)],
       ["Apr–Jun luck size, 90th percentile", C.usd(r.abs_luck2_p90)], ["Players", C.int(r.n)]]));
+    C.dataTable(svg, "sw-table", "Luck swing size by Jan–Mar swing-size tenth", ["Tenth", "Jan–Mar swing, median SD", "Apr–Jun absolute luck, median",
+      "Apr–Jun absolute luck, 90th percentile", "Players"],
+      rows.map((r) => [r.decile, C.num(r.sd1, 2), C.usd(r.abs_luck2_med), C.usd(r.abs_luck2_p90), C.int(r.n)]));
     const a = rows[0], b = rows[rows.length - 1];
     $("#sw-note").innerHTML = `Rank correlation <span class="mono">${C.num(D.swing.rho_size, 2)}</span> between Jan–Mar swing size and the size of Apr–Jun luck,
       out of sample. The heaviest tenth's typical swing was <span class="mono">${C.usd(b.abs_luck2_med)}</span> against <span class="mono">${C.usd(a.abs_luck2_med)}</span>
@@ -142,6 +155,8 @@
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = g;
     hover(svg, rows, (r) => C.tipRows(`Tenth ${r.decile} by swing size`, [
       ["Ended Apr–Jun ahead", C.pct(r.ahead2, 1)], ["Median Apr–Jun result", C.usd(r.net2_med, { plus: true })], ["Players", C.int(r.n)]]));
+    C.dataTable(svg, "he-table", "Share ending ahead and median result by swing-size tenth", ["Tenth", "Ended Apr–Jun ahead", "Median Apr–Jun result", "Players"],
+      rows.map((r) => [r.decile, C.pct(r.ahead2, 1), C.usd(r.net2_med, { plus: true }), C.int(r.n)]));
     const a = rows[0], b = rows[rows.length - 1];
     $("#he-note").innerHTML = `<span class="mono">${C.pct(a.ahead2, 1)}</span> of the lightest tenth ended Apr–Jun ahead, against
       <span class="mono">${C.pct(b.ahead2, 1)}</span> of the heaviest. Their median results were <span class="mono">${C.usd(a.net2_med, { plus: true })}</span> and

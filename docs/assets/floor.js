@@ -15,14 +15,16 @@
   };
 
   // past/future: snapshots of the move list for undo and redo, each with a label for what the change was
+  const moveCost = () => S.price + (S.down || 0); // price plus the theo lost while the machine is moved
   const S = { metric: "play", a: 0, b: 5, sel: null, zone: null, moves: [], price: MOVE_COST, past: [], future: [] };
   let lines = [];
   let F, M, PF, flags = {}, byId, slotById, bankFx, covIdx, agg, pos, base, opt = { key: null };
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("floor.html", async () => {
     try {
       [F, M, PF] = await Promise.all([C.load("floor"), C.load("machines"), C.load("player_flags")]);
     } catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     byId = Object.fromEntries(M.map((m) => [m.id, m]));
     slotById = Object.fromEntries(F.slots.map((s) => [s.id, s]));
     bankFx = Object.fromEntries(F.banks.map((b) => [b.id, b.fx]));
@@ -50,7 +52,7 @@
       persist(); render();
     };
     // both optimize buttons apply the best plan at the current price and show why it stops there
-    document.addEventListener("click", (e) => {
+    C.listen(document, "click", (e) => {
       const b = e.target.closest("[data-optimize]"); if (!b) return;
       applyBest();
     });
@@ -60,7 +62,7 @@
       const n = planTotals(layout()).rows.length;
       if (S.moves.length) commit([], `Reset ${n} moved machine${n === 1 ? "" : "s"}`);
     };
-    document.addEventListener("keydown", (e) => {
+    C.listen(document, "keydown", (e) => {
       if (!(e.ctrlKey || e.metaKey) || e.altKey || e.target.closest("input, select, textarea")) return;
       const k = e.key.toLowerCase();
       if (k === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
@@ -69,7 +71,7 @@
     buildFloor();
     render();
     persist(); // keep the action plan's move summary in step with the current period
-    addEventListener("themechange", render);
+    C.listen(window, "themechange", render);
   });
 
   // ------------------------------------------------------------- layout with moves applied
@@ -96,6 +98,8 @@
   function projectMachine(mid, toSlot) {
     const m = byId[mid], fromBank = slotById[m.loc[5]].bank, toBank = slotById[toSlot].bank;
     if (fromBank === toBank) return { day: 0, lo: 0, hi: 0, fromBank, toBank };
+    // a bank whose effect belongs to its new machines (C.NOT_A_SPOT) isn't a better or worse spot: no projected change
+    if (C.NOT_A_SPOT.includes(fromBank) || C.NOT_A_SPOT.includes(toBank)) return { day: 0, lo: 0, hi: 0, fromBank, toBank, d: 0 };
     const d = bankFx[toBank] - bankFx[fromBank];
     const i = covIdx[fromBank], j = covIdx[toBank], cv = F.bankCov.cov;
     const sd = Math.sqrt(Math.max(0, cv[i][i] + cv[j][j] - 2 * cv[i][j]));
@@ -115,7 +119,7 @@
     }
     const day = rows.reduce((t, r) => t + r.day, 0);
     const half = Math.sqrt(rows.reduce((t, r) => t + ((r.hi - r.lo) / 2) ** 2, 0));
-    return { rows, day, lo: day - half, hi: day + half, cost: rows.length * S.price };
+    return { rows, day, lo: day - half, hi: day + half, cost: rows.length * moveCost() };
   }
 
   // ------------------------------------------------------------- optimizer
@@ -129,7 +133,7 @@
     const key = `${S.a}-${S.b}`;
     if (opt.key === key) return opt.steps;
     const E = {}; for (const b in bankFx) if (bankFx[b] != null) E[b] = Math.exp(bankFx[b]);
-    const okSlot = (s) => s && s.zone !== "Z-HL" && E[s.bank] != null;
+    const okSlot = (s) => s && s.zone !== "Z-HL" && !C.NOT_A_SPOT.includes(s.bank) && E[s.bank] != null;
     const perDay = (mid) => { const s = agg[mid]; return s.days > 0 ? (s.theoHr * s.ah) / s.days : 0; };
     const home = {}; for (const s in base) home[base[s]] = s;
     const free = new Map(); // mid -> { q, bank } for machines still in their Jun 30 slot
@@ -180,8 +184,8 @@
   // within the catalogue's limit on machine moves
   function stopAt(steps) {
     let k = 0, bestNet = 0;
-    steps.forEach((s, i) => { const net = s.cum - s.n * S.price; if (s.n <= MOVE_LIMIT && net > bestNet + 1e-6) { bestNet = net; k = i + 1; } });
-    const capped = !!steps[k] && steps[k].gain > steps[k].k * S.price; // the next step would still pay
+    steps.forEach((s, i) => { const net = s.cum - s.n * moveCost(); if (s.n <= MOVE_LIMIT && net > bestNet + 1e-6) { bestNet = net; k = i + 1; } });
+    const capped = !!steps[k] && steps[k].gain > steps[k].k * moveCost(); // the next step would still pay
     return { k, net: bestNet, capped };
   }
   function applyBest() {
@@ -282,7 +286,7 @@
     svg.setAttribute("viewBox", "-6 -5 148 130");
     boxes = Object.fromEntries(F.zones.map((z) => [z.id, zoneShape(z)]));
     svg.innerHTML = `<defs><marker id="arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L6 3L0 6z" fill="var(--accent)"/></marker></defs>
-      <g id="walks"></g><g id="zones-g"></g><g id="slots-g"></g><g id="mach-g"></g><g id="lines-g"></g><g id="flags-g"></g><g id="hot-g"></g><g id="ghost-g"></g>`;
+      <g id="walks"></g><g id="zones-g"></g><g id="slots-g"></g><g id="lines-g"></g><g id="mach-g"></g><g id="flags-g"></g><g id="hot-g"></g><g id="ghost-g"></g>`;
     $("#zones-g").innerHTML = F.zones.map((z) => {
       const b = boxes[z.id];
       return `<g data-zone="${z.id}"><path class="zone-edge" d="${b.d}"/><path class="zone-area" d="${b.d}"/>
@@ -334,8 +338,10 @@
   function render() {
     C.$$("#metric button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.m === S.metric));
     $("#metric-desc").textContent = DESC[S.metric] + ", " + C.periodLabel(S.a, S.b) + ".";
-    $("#title").textContent = `Floor plan, ${C.periodLabel(S.a, S.b)}`;
+    $("#title").textContent = `Floor plan · ${C.periodLabel(S.a, S.b)}`;
     agg = Object.fromEntries(M.map((m) => [m.id, C.agg(m, S.a, S.b)]));
+    // a move takes the machine off the floor for 3 hours (catalogue downtime): charge that play at the floor's theo per hour
+    { const all = Object.values(agg), th = all.reduce((t, s) => t + s.theo, 0), ah = all.reduce((t, s) => t + s.ah, 0); S.down = ah > 0 ? (3 * th) / ah : 0; }
     flags = C.machineFlags(M, S.a, S.b, PF);
     const at = layout();
     drawWalks();
@@ -383,12 +389,12 @@
         ? `<circle class="flag-dot" cx="${cx}" cy="${cy}" r=".75"><title>${mid}: ${C.esc(f.reasons.join("; "))}</title></circle>`
         : `<circle class="flag-ring" cx="${cx}" cy="${cy}" r=".6"><title>${mid}: ${C.esc(f.reasons.join("; "))}</title></circle>`;
     }).join("");
-    drawDetail(); drawPlan(at); drawCounter(at); drawStop(at); drawZones(at, tr);
+    drawDetail(); drawPlan(at); drawFloorTable(at); drawCounter(at); drawStop(at); drawZones(at, tr);
   }
 
   // ------------------------------------------------------------- when to stop
   function drawStop(at) {
-    const steps = optimize(), { k, net, capped } = stopAt(steps), P = S.price;
+    const steps = optimize(), { k, net, capped } = stopAt(steps), P = moveCost();
     const mine = planTotals(at);
     const nMax = steps.length ? steps[steps.length - 1].n : 0;
     const desc = (s) => s.kind === "swap"
@@ -464,6 +470,8 @@
     const nv = $("#stop-net");
     const W2 = Math.max(300, nv.clientWidth || 600), H2 = 240;
     const pts = [{ n: 0, net: 0, lo: 0, hi: 0 }].concat(steps.map((s) => ({ n: s.n, net: s.cum - s.n * P, lo: s.lo - s.n * P, hi: s.hi - s.n * P })));
+    C.dataTable($("#stop-net").closest(".grid-2"), "stop-table", "Each optimizer step: what it adds and the net over July", ["Step", "Machines moved", "Adds over July", "Net after move costs", "90% range"],
+      steps.map((s) => [C.esc(desc(s)), s.n, C.usd(s.gain, { plus: true }), C.usd(s.cum - s.n * P, { plus: true }), `${C.usd(s.lo - s.n * P, { plus: true })} to ${C.usd(s.hi - s.n * P, { plus: true })}`]));
     const vMin = Math.min(0, ...pts.map((p) => p.lo)), vMax = Math.max(1, ...pts.map((p) => p.hi));
     const span = C.niceMax(vMax - vMin);
     const t2 = span / 4, y0 = Math.floor(vMin / t2) * t2;
@@ -520,8 +528,8 @@
       const go = (t) => `<span class="go">${t}</span>`;
       el.innerHTML = `<h3>Start here</h3><p class="muted" style="margin:4px 0 0">What the review found, ${C.periodLabel(S.a, S.b)}.</p>
         <ul class="start">
-          ${red.length ? `<li><button type="button" data-pick="${red[0]}"><span class="t"><span class="dot lead"></span>${red.length === 1 ? `<span class="mono">${red[0]}</span> pays out off its configuration` : `${red.length} machines flagged`}</span>
-            <span class="d">The only flag that survives correction for testing 310 machines.${nWatch ? ` ${nWatch} more are on watch.` : ""}</span>${go("Show")}</button></li>` : ""}
+          ${red.length ? `<li><button type="button" data-pick="${red[0]}"><span class="t"><span class="dot lead"></span>${red.length === 1 ? `<span class="mono">${red[0]}</span> is flagged for inspection` : `${red.length} machines flagged for review`}</span>
+            <span class="d">A flag is a reason to inspect, not proof of a fault. ${nWatch ? `${nWatch} more are on watch.` : ""}</span>${go("Show")}</button></li>` : ""}
           <li><button type="button" data-zone="Z-B40"><span class="t">${b40} of the GM's bottom 10 are in Back Forty</span>
             <span class="d">The zone furthest from the entrances. Location explains them better than the machines do.</span>${go("Show")}</button></li>
           <li><a href="comps.html${location.search}"><span class="t">Comps got 53% cheaper on May 1</span>
@@ -529,8 +537,7 @@
           <li><a href="actions.html${location.search}"><span class="t">The $100,000 plan for July</span>
             <span class="d">Three funded fixes, each with its effect, uncertainty and how to measure it.</span>${go("Actions")}</a></li>
         </ul>
-        <p class="start-hint">Hover a machine for its figures, select it to pin them here. Drag it onto another slot to project a move;
-          dropping on an occupied slot swaps the two.</p>`;
+        <p class="start-hint">Hover a machine for its figures, select it to pin them here. Drag it onto another slot; dropping on an occupied slot swaps the two.</p>`;
       el.onclick = (e) => {
         const p = e.target.closest("[data-pick]"), z = e.target.closest("[data-zone]");
         if (p) { S.sel = p.dataset.pick; render(); }
@@ -563,7 +570,7 @@
     const el = $("#plan");
     const over = T.rows.length > MOVE_LIMIT;
     el.innerHTML = `<h3>Move plan for July</h3>
-      <p class="muted" style="margin:4px 0 0">${C.usd(S.price)} a machine, ${LEAD}-day lead, so ${DAYS} days of effect in July.</p>
+      <p class="muted" style="margin:4px 0 0">${C.usd(S.price)} a machine plus about ${C.usd(S.down || 0)} of play lost during the 3-hour move, ${LEAD}-day lead, so ${DAYS} days of effect in July.</p>
       ${T.rows.length ? `<ul class="moves">${T.rows.map((r) => `<li data-line="${r.mid}">
           <span><span class="mono">${r.mid}</span><span class="sub small muted">${r.fromBank} → ${r.toBank}${(slotById[r.to].zone === "Z-B40") ? ", into Back Forty" : ""}</span></span>
           <span class="num ${r.day >= 0 ? "" : "muted"}">${C.usd(r.day, { plus: true })}/day</span>
@@ -575,7 +582,7 @@
         ${over ? `<p class="note" style="color:var(--neg)">The catalogue allows ${MOVE_LIMIT} machine moves; this plan has ${T.rows.length}.</p>` : ""}
         <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
           <a class="btn primary" href="actions.html${location.search}" style="text-decoration:none">Open the action plan ${C.icon("arrow", 14)}</a></div>`
-        : `<p class="empty">No moves yet. Drag a machine onto another slot to price a move, or let the optimizer pick the moves that pay for themselves.</p>
+        : `<p class="empty">No moves yet. Drag a machine onto another slot or let the optimizer pick the moves that pay for themselves.</p>
           <button class="btn primary" type="button" data-optimize="scroll">Find the best moves</button>`}
       <p class="note">Projection: the machine's own theo per day × the change in bank effect from the location model (fit Jan–Apr).
         Back-test on the one real move, M-1152 from Back Forty to the Entrance on Feb 4: predicted <span class="mono">+$303</span>/day,
@@ -589,6 +596,19 @@
     // pointing at a row in the list lights its line on the plan
     el.onmouseover = (e) => { const li = e.target.closest("li[data-line]"); hotLineIfChanged(li ? li.dataset.line : null); };
     el.onmouseleave = () => hotLineIfChanged(null);
+  }
+
+  function drawFloorTable(at) {
+    const zoneName = Object.fromEntries(F.zones.map((z) => [z.id, z.name]));
+    const rows = Object.entries(at).sort((a, b) => a[0].localeCompare(b[0])).map(([mid, slotId]) => {
+      const slot = slotById[slotId], s = agg[mid], flag = flags[mid];
+      return [mid, C.esc(byId[mid].theme), C.esc(zoneName[slot.zone] || slot.zone), slot.bank.slice(2), slot.id,
+        C.usd(s.ciHr), C.usd(s.theoHr, { d: 2 }), C.pct(s.avail), flag ? (flag.level === "flag" ? "Flagged" : "Watch") : "—",
+        byId[mid].b10 ? `Bottom 10, rank ${byId[mid].b10.rank}` : "—"];
+    });
+    C.dataTable($("#floor").closest(".floor-wrap"), "floor-machine-table", "Machine locations and measures shown on the floor plan",
+      ["Machine", "Game", "Zone", "Bank", "Slot", "Coin-in / available hour", "Theo / available hour", "Availability", "Review status", "GM bottom 10"],
+      rows);
   }
   function undoMachine(mid) {
     // rebuild the move list without any move that touched this machine's final slot chain
@@ -756,8 +776,8 @@
     if (partner) {
       const q = projectMachine(partner, l.from.id);
       rows.push([`${partner}, the other way`, `${C.usd(q.day, { plus: true })}/day`],
-        ["Swap over July, after 2 moves", C.usd((p.day + q.day) * DAYS - 2 * S.price, { plus: true })]);
-    } else rows.push(["Over July, after the move", C.usd(p.day * DAYS - S.price, { plus: true })]);
+        ["Swap over July, after 2 moves", C.usd((p.day + q.day) * DAYS - 2 * moveCost(), { plus: true })]);
+    } else rows.push(["Over July, after the move", C.usd(p.day * DAYS - moveCost(), { plus: true })]);
     C.tip(C.tipRows(partner ? `Swap: ${mid} and ${partner}` : `Move: ${mid} into an empty slot`, rows)
       + `<div class="small muted" style="margin-top:4px">${C.esc(byId[mid].theme)}${partner ? `; ${C.esc(byId[partner].theme)}` : ""}</div>`, e);
   }

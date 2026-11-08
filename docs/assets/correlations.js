@@ -4,9 +4,10 @@
   const C = window.Core, $ = C.$;
   let dayMode = "resid";
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("correlations.html", async () => {
     let D;
     try { D = await C.load("corr"); } catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     $("#key").innerHTML = `<span class="scale">−1<span class="ramp" style="background:${C.gradient(C.DIV)}"></span>+1</span><span><i class="ns"></i>Not significant (q ≥ 0.05)</span>`;
     const draw = () => { daily(D); machines(D); players(D); errors(D); };
     draw();
@@ -15,8 +16,8 @@
       C.$$("button", $("#day-mode")).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
       dayMode = b.dataset.m; daily(D);
     };
-    addEventListener("resize", draw);
-    addEventListener("themechange", draw);
+    C.listen(window, "resize", draw);
+    C.listen(window, "themechange", draw);
   });
 
   const r2 = (v) => (v == null ? "–" : v.toFixed(2).replace("-", "−"));
@@ -82,16 +83,17 @@
 
   function errors(D) {
     const B = D.errors, M = { vars: B.vars, ...B.modes.all }, f = (a, b) => C.find(M, a, b);
-    C.matrix($("#err"), M, { kind: "r", focus: ["EL (headline)"] });
+    const displayModel = (name) => name.replace(/\bEL2A\b/g, "weekly refit").replace(/\bEL\b/g, "our model");
+    C.matrix($("#err"), M, { kind: "r", focus: ["EL (headline)"], displayName: displayModel });
     $("#err-meta").textContent = `Pearson r · ${B.n} days, May 1 – Jun 30`;
     const fixed = B.vars.filter((x) => x.startsWith("EL") && !x.includes("refit"));
     const fr = []; for (let i = 0; i < fixed.length; i++) for (let j = 0; j < i; j++) fr.push(f(fixed[i], fixed[j]).r);
     const ea = f("EL (headline)", "EL2A, weekly refit"), eb = f("EL (headline)", "B1 weekday mean");
-    $("#err-says").innerHTML = `<li><b>The fixed EL variants make the same mistakes</b>: their errors correlate ${Math.min(...fr).toFixed(2)}–${Math.max(...fr).toFixed(2)}. Averaging two of them is averaging one forecast with itself.</li>
+    $("#err-says").innerHTML = `<li><b>The fixed versions of our model make the same mistakes</b>: their errors correlate ${Math.min(...fr).toFixed(2)}–${Math.max(...fr).toFixed(2)}. Averaging two of them is averaging one forecast with itself.</li>
       <li><b>One shared error</b> carries ${C.pct(B.pc1_share, 0)} of the variation across all nine models.</li>
-      <li><b>Weekly refits make different mistakes</b>: EL vs EL2A only ${r2(ea.r)}. The refit follows June's decline but over-forecasts Locals Week, while fixed EL does the reverse. This is the one pair where averaging could help, but averaging EL with EL2A lost in Jan–Apr validation, so it wasn't adopted.</li>
-      <li>B1, which ignores events, shares part of EL's error (${r2(eb.r)}).</li>`;
+      <li><b>Weekly refits make different mistakes</b>: our model vs the weekly refit only ${r2(ea.r)}. The refit follows June's decline but over-forecasts Locals Week, while our model does the reverse. This is the one pair where averaging could help, but averaging the two lost in Jan–Apr validation, so it wasn't adopted.</li>
+      <li>The weekday baseline, which ignores events, shares part of our model's error (${r2(eb.r)}).</li>`;
     $("#err-tab").innerHTML = `<thead><tr><th>Model</th><th class="num">RMSE, May–Jun</th><th class="num">Mean error (bias) / day</th></tr></thead><tbody>
-      ${B.vars.map((m) => `<tr class="${m === "EL (headline)" ? "hl" : ""}"><td>${C.esc(m)}</td><td class="num">${C.usd(B.rmse[m])}</td><td class="num">${C.usd(B.bias[m], { plus: true })}</td></tr>`).join("")}</tbody>`;
+      ${B.vars.map((m) => `<tr class="${m === "EL (headline)" ? "hl" : ""}"><td>${C.esc(displayModel(m))}</td><td class="num">${C.usd(B.rmse[m])}</td><td class="num">${C.usd(B.bias[m], { plus: true })}</td></tr>`).join("")}</tbody>`;
   }
 })();

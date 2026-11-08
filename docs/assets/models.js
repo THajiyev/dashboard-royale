@@ -4,48 +4,50 @@
   "use strict";
   const C = window.Core, $ = C.$;
   const NAME = {
-    "EL x CatBoost residual (best post hoc)": "EL × CatBoost residual",
-    "EL + hol near1 lam=5": "EL + within-1-day-of-holiday flag",
-    "EL + hol longwknd+day lam=2": "EL + long-weekend and holiday flags",
-    "EL + hol kernel1 lam=20": "EL + holiday closeness kernel",
-    "EL event-type lift": "EL event-type lift",
-    "EL + hist season_yoy beta=0.5": "EL + city visitor trend",
+    "EL x CatBoost residual (best post hoc)": "Our model × CatBoost residual",
+    "EL + hol near1 lam=5": "Our model + within-1-day-of-holiday flag",
+    "EL + hol longwknd+day lam=2": "Our model + long-weekend and holiday flags",
+    "EL + hol kernel1 lam=20": "Our model + holiday closeness kernel",
+    "EL event-type lift": "Our model (event-type lift)",
+    "EL + hist season_yoy beta=0.5": "Our model + city visitor trend",
     "B2 event-aware weekday": "B2 event-aware weekday",
-    "EL2A segments: bottom_up beta=0.5": "Segments: locals + visitors",
-    "EL2A segments: bottom_up beta=1.0": "Segments, bottom-up, full visitor trend",
-    "EL2A segments: bottom_up beta=0.0": "Segments, bottom-up, no visitor trend",
-    "EL2A segments: top_down beta=0.0": "Segments, top-down, no visitor trend",
-    "EL2A segments: top_down beta=0.5": "Segments, top-down, half visitor trend",
-    "EL2A segments: top_down beta=1.0": "Segments, top-down, full visitor trend",
-    "EL + hist seasonal beta=0.5": "EL + 2023–24 seasonal pattern",
-    "EL2A + hist seasonal beta=0.5": "EL2A + 2023–24 seasonal pattern",
-    "EL2A + hol longwknd+day lam=2": "EL2A + long-weekend and holiday flags",
-    "EL2A + hol near1 lam=5": "EL2A + within-1-day-of-holiday flag",
-    "EL2 + 28d anchor": "EL2A, 28-day anchor, weekly refresh",
-    "EL2A + hol kernel1 lam=20": "EL2A + holiday closeness kernel",
-    "EL2A + hist season_yoy beta=0.5": "EL2A + city visitor trend",
-    "EL + recent-level (28d) + payday": "EL + recent level + payday",
+    "EL2A segments: bottom_up beta=0.5": "Weekly refit, segments: locals + visitors",
+    "EL2A segments: bottom_up beta=1.0": "Weekly refit, full visitor trend",
+    "EL2A segments: bottom_up beta=0.0": "Weekly refit, no visitor trend",
+    "EL2A segments: top_down beta=0.0": "Weekly refit, top-down, no visitor trend",
+    "EL2A segments: top_down beta=0.5": "Weekly refit, top-down, half visitor trend",
+    "EL2A segments: top_down beta=1.0": "Weekly refit, top-down, full visitor trend",
+    "EL + hist seasonal beta=0.5": "Our model + 2023–24 seasonal pattern",
+    "EL2A + hist seasonal beta=0.5": "Weekly refit + 2023–24 seasonal pattern",
+    "EL2A + hol longwknd+day lam=2": "Weekly refit + long-weekend and holiday flags",
+    "EL2A + hol near1 lam=5": "Weekly refit + within-1-day-of-holiday flag",
+    "EL2 + 28d anchor": "Weekly refit, 28-day anchor",
+    "EL2A + hol kernel1 lam=20": "Weekly refit + holiday closeness kernel",
+    "EL2A + hist season_yoy beta=0.5": "Weekly refit + city visitor trend",
+    "EL + recent-level (28d) + payday": "Our model + recent level + payday",
     "B1 weekday mean": "B1 weekday mean, baseline",
     "B0 constant mean": "B0 constant mean",
   };
   const ITERS = [
     ["Phase 0 and 2", "Baselines B0, B1, B2, then OLS, ETS, SARIMAX, structural, LightGBM, Bayesian ridge and an ensemble. B2, the event-aware weekday mean, was best; none of the others beat it."],
-    ["Iteration 1", "EL: B2's weekday base with a separate lift per event type, shrunk toward its class. Sports and festivals about +17–20%, conventions about +3%. The current headline."],
-    ["Iteration 2", "About 30 variants: AutoARIMA, AutoETS, Theta, MSTL, Prophet, XGBoost and CatBoost, bottom-up by zone, combinations. All three advance picks lost to EL."],
-    ["Iteration 3", "EL2A: refit weekly, level anchored to the last 28 non-event days. Best on ordinary days, but it over-forecast Locals Week by about 10%."],
+    ["Iteration 1", "Our model uses B2's weekday base with a separate lift per event type, shrunk toward its class. Sports and festivals about +17–20%, conventions about +3%. The current headline."],
+    ["Iteration 2", "About 30 variants: AutoARIMA, AutoETS, Theta, MSTL, Prophet, XGBoost and CatBoost, bottom-up by zone, combinations. All three advance picks lost to our model."],
+    ["Iteration 3", "The weekly refit anchors its level to the last 28 non-event days. Best on ordinary days, but it over-forecast Locals Week by about 10%."],
     ["Iteration 4", "Holiday flags, a payday term, 2023–24 seasonality and the latest published city visitor trend. Holiday flags moved error by ±2%; the seasonal pattern made it worse."],
     ["Iteration 5", "Separate weekly forecasts for locals and visitors, so a locals promotion lifts only locals. It removed part of the Locals Week overshoot. A July test with a written decision rule is planned."],
-    ["Iteration 6", "EL times a recent-demand factor: 128 variants (7–28-day averages, EMAs, weekday-specific levels, four ways of handling event days, 25–100% strength). With one forecast on Apr 30 every variant lost to EL, because a strong April pushed the factor up just before demand fell. With weekly refresh the best variant is the 28-day anchor already in EL2A. Not adopted."],
+    ["Iteration 6", "Our model times a recent-demand factor: 128 variants (7–28-day averages, EMAs, weekday-specific levels, four ways of handling event days, 25–100% strength). With one forecast on Apr 30 every variant lost to our model, because a strong April pushed the factor up just before demand fell. With weekly refresh the best variant is the 28-day anchor. Not adopted."],
   ];
+  const displayModel = (model) => NAME[model] || model.replace(/\bEL2A\b/g, "weekly refit").replace(/\bEL\b/g, "our model");
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("models.html", async () => {
     let D, F;
     try { [D, F] = await Promise.all([C.load("models"), C.load("forecast")]); }
     catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     const draw = () => { b1(F); forest(D); };
     draw(); tables(D);
-    addEventListener("resize", draw);
-    addEventListener("themechange", draw);
+    C.listen(window, "resize", draw);
+    C.listen(window, "themechange", draw);
   });
 
   function b1(F) {
@@ -60,6 +62,7 @@
         <text x="${x0 + w / 2}" y="${H - 6}" text-anchor="middle">${days[i]}</text>`;
     });
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = g;
+    C.dataTable(svg, "b1-table", "B1: mean daily theo by weekday, Jan–Apr", ["Weekday", "Mean daily theo"], days.map((d, i) => [d, C.usd(v[i])]));
   }
 
   function forest(D) {
@@ -72,7 +75,7 @@
       <text x="${x(t)}" y="${H - 8}" text-anchor="middle">${C.pct(t, 0, true)}</text>`; }
     g += `<text x="${x(0) + 6}" y="${P.t - 10}">B1</text><text x="${x(lo)}" y="${P.t - 10}">Better</text><text x="${W - P.r}" y="${P.t - 10}" text-anchor="end">Worse</text>`;
     rows.forEach((r, i) => {
-      const cy = P.t + i * row + row / 2, name = NAME[r.model] || r.model, head = r.model === "EL event-type lift";
+      const cy = P.t + i * row + row / 2, name = displayModel(r.model), head = r.model === "EL event-type lift";
       const base = r.model === "B1 weekday mean";
       const clip = (v) => Math.max(lo, Math.min(hi, v));
       if (i % 2 === 0) g += `<rect x="0" y="${cy - row / 2}" width="${W}" height="${row}" fill="var(--raised)" opacity=".5"/>`;
@@ -91,7 +94,7 @@
     svg.onmousemove = (e) => {
       const t = e.target.closest("[data-i]"); if (!t) return C.tip(null);
       const r = rows[+t.dataset.i];
-      C.tip(C.tipRows(C.esc(NAME[r.model] || r.model), [["Round", r.iteration], ["Protocol", r.protocol], ["Picked in advance", r.picked_in_advance ? "Yes" : "No"],
+      C.tip(C.tipRows(C.esc(displayModel(r.model)), [["Round", r.iteration], ["Protocol", r.protocol], ["Picked in advance", r.picked_in_advance ? "Yes" : "No"],
         ["RMSE", C.usd(r.RMSE)], ["MAE", C.usd(r.MAE)], ["Δ RMSE vs B1", r.model === "B1 weekday mean" ? "–" : `${C.pct(r.dRMSE_vs_B1, 0, true)} (${C.pct(r.dRMSE_lo, 0, true)} to ${C.pct(r.dRMSE_hi, 0, true)})`],
         ["90% band caught", C.pct(r.cover90, 0)]]), e);
     };
@@ -102,7 +105,7 @@
     const rows = D.vsB1.slice().sort((a, b) => a.RMSE - b.RMSE);
     $("#tab").innerHTML = `<thead><tr><th class="num">#</th><th>Model</th><th>Round</th><th>Protocol</th><th>In advance</th><th class="num">RMSE</th><th class="num">MAE</th>
       <th class="num">Δ RMSE vs B1, 95% CI</th><th class="num">Ordinary days</th><th class="num">Event days</th><th class="num">Bias / day</th><th class="num">90% band caught</th></tr></thead><tbody>
-      ${rows.map((r, i) => `<tr class="${r.model === "EL event-type lift" ? "hl" : ""}"><td class="num">${i + 1}</td><td>${C.esc(NAME[r.model] || r.model)}</td><td>${C.esc(r.iteration)}</td><td>${r.protocol}</td>
+      ${rows.map((r, i) => `<tr class="${r.model === "EL event-type lift" ? "hl" : ""}"><td class="num">${i + 1}</td><td>${C.esc(displayModel(r.model))}</td><td>${C.esc(r.iteration)}</td><td>${r.protocol}</td>
         <td>${r.picked_in_advance ? '<span class="tag"><span class="dot accent"></span>Yes</span>' : '<span class="tag muted">No</span>'}</td>
         <td class="num">${C.usd(r.RMSE)}</td><td class="num">${C.usd(r.MAE)}</td>
         <td class="num">${r.model === "B1 weekday mean" ? "–" : `${C.pct(r.dRMSE_vs_B1, 0, true)} <span class="muted">(${C.pct(r.dRMSE_lo, 0, true)} to ${C.pct(r.dRMSE_hi, 0, true)})</span>`}</td>
@@ -110,11 +113,11 @@
         <td class="num">${C.pct(r.cover90, 0)}</td></tr>`).join("")}</tbody>`;
     $("#iters").innerHTML = ITERS.map(([h, t]) => `<li><span><strong>${h}.</strong> ${t}</span></li>`).join("");
     $("#noise").innerHTML = `<thead><tr><th>Fit</th><th class="num">Ordinary-day RMSE, Jan–Jun</th><th class="num">May–Jun</th></tr></thead><tbody>
-      <tr><td>EL, frozen Apr 30 (the real forecast)</td><td class="num">–</td><td class="num">${C.usd(D.vsB1.find((r) => r.model === "EL event-type lift").ordinary_RMSE)}</td></tr>
-      ${D.noiseFloor.map((r) => `<tr><td>${C.esc(r.fit.replace("Jan-Jun", "Jan–Jun"))}</td><td class="num">${C.usd(r.ordinary_RMSE_janjun)}</td><td class="num">${C.usd(r.ordinary_RMSE_mayjun)}</td></tr>`).join("")}</tbody>`;
+      <tr><td>Our model, frozen Apr 30 (the real forecast)</td><td class="num">–</td><td class="num">${C.usd(D.vsB1.find((r) => r.model === "EL event-type lift").ordinary_RMSE)}</td></tr>
+      ${D.noiseFloor.map((r) => `<tr><td>${C.esc(displayModel(r.fit.replace("Jan-Jun", "Jan–Jun")))}</td><td class="num">${C.usd(r.ordinary_RMSE_janjun)}</td><td class="num">${C.usd(r.ordinary_RMSE_mayjun)}</td></tr>`).join("")}</tbody>`;
     const p2 = D.phase2.filter((r) => r.target === "theo_usd").sort((a, b) => a.MAE - b.MAE);
     $("#p2").innerHTML = `<thead><tr><th>Model</th><th>Kind</th><th class="num">CV MAE, Jan–Apr</th><th class="num">Holdout MAE</th><th class="num">Bias / day</th><th class="num">Skill vs B1</th><th class="num">90% band caught</th></tr></thead><tbody>
-      ${p2.map((r) => `<tr class="${r.cv_choice ? "hl" : ""}"><td>${C.esc(r.model)}${r.cv_choice ? '<span class="sub">Cross-validation pick</span>' : ""}</td><td>${r.stack}</td>
+      ${p2.map((r) => `<tr class="${r.cv_choice ? "hl" : ""}"><td>${C.esc(displayModel(r.model))}${r.cv_choice ? '<span class="sub">Cross-validation pick</span>' : ""}</td><td>${r.stack}</td>
         <td class="num">${C.usd(r.cv_mae_janapr)}</td><td class="num">${C.usd(r.MAE)}</td><td class="num">${C.usd(r.bias, { plus: true })}</td>
         <td class="num">${r.skill_vs_B1 == null ? (r.model.startsWith("B1") ? "–" : C.pct(1 - r.MAE / p2.find((x) => x.model.startsWith("B1")).MAE, 0, true)) : C.pct(r.skill_vs_B1, 0, true)}</td>
         <td class="num">${C.pct(r.coverage, 0)}</td></tr>`).join("")}</tbody>`;

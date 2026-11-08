@@ -4,9 +4,10 @@
   "use strict";
   const C = window.Core, $ = C.$;
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("evidence.html", async () => {
     let K;
     try { K = await C.load("claims"); } catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     const ok = K.claims.filter((c) => c.pass).length;
     $("#rep-note").innerHTML = `Last run ${C.esc(K.generated)}: <strong>${ok} of ${K.claims.length}</strong> claims reproduce. Three read a fitted model's saved output
       (C6, C8, C12's adjusted ratio) and say so under "Table"; the rest use <code>data/</code> only.`;

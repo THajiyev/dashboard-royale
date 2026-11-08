@@ -20,13 +20,14 @@
     .replace(/, (2025-\d\d-\d\d)$/, (_, d) => `, ${C.date(d)}`)
     .replace(/ \(G-[A-Z0-9]+\)/g, "");
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("context.html", async () => {
     let X, Mo;
     try { [X, Mo] = await Promise.all([C.load("context"), C.load("models")]); }
     catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     const draw = () => { closure(X); weather(X); };
     stats(X, Mo); draw(); tables(X, Mo);
-    addEventListener("resize", draw); addEventListener("themechange", draw);
+    C.listen(window, "resize", draw); C.listen(window, "themechange", draw);
   });
 
   function stats(X, Mo) {
@@ -60,6 +61,8 @@
     });
     g += `<text x="${x(2)}" y="${P.t + 14}" text-anchor="middle" style="fill:var(--ink-2)">Closed</text>`;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = g;
+    C.dataTable(svg, "closure-table", "Back Forty against the control zones, by week from the closure", ["Week from closure", "Back Forty vs controls", "90% low", "90% high"],
+      rows.map((r) => [`${r.rel_week > 0 ? "+" : ""}${r.rel_week}${r.rel_week >= 0 && r.rel_week <= 4 ? " (closed)" : ""}`, C.pct(r.effect_pct, 1, true), C.pct(r.lo90_pct, 1, true), C.pct(r.hi90_pct, 1, true)]));
     svg.onmousemove = (e) => {
       const t = e.target.closest("[data-w]"); if (!t) return C.tip(null);
       const r = rows.find((q) => q.rel_week === +t.dataset.w);
@@ -93,6 +96,8 @@
     w.forEach((r, i) => { if (r.prcp_mm > 1) { (run ||= []).push(i); } else flush(); });
     flush();
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = g;
+    C.dataTable(svg, "wx-table", "Daily high temperature and rain at the Las Vegas airport, Jan–Jun 2025", ["Day", "High, °C", "Rain, mm"],
+      w.map((r) => [C.date(r.source_date, { month: "short", day: "numeric" }), C.num(r.tmax_c, 1), C.num(r.prcp_mm, 1)]));
   }
 
   function tables(X, Mo) {

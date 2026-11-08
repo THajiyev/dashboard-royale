@@ -264,18 +264,27 @@ claim("C18", 5, "The cut didn't bring in play: locals who already used comps pla
 
 # ============================================================================= Q6 actions
 cat = rd("2_machine_decision/action_catalog").set_index("action_type_id")
-plan = {"A-MOVE-MACHINE": 24, "A-WAYFINDING": 1, "A-INSPECT": 1}
+plan = {"A-PROMO": 2, "A-MOVE-MACHINE": 6, "A-WAYFINDING": 1}
 cost = sum(n * (cat.loc[a, "unit_cost_cents"] + cat.loc[a, "recurring_cost_cents_per_day"] * max(0, 30 - cat.loc[a, "lead_days"])) / 100
            for a, n in plan.items())
-claim("C19", 6, "The plan funds 24 machine moves, new signs for Back Forty and M-1158's inspection for $51,900, and keeps $48,100.",
-      cost, 51900, 0, "usd",
+claim("C19", 6, "The plan funds two promotion weekends, 6 machine moves and new signs for Back Forty for $48,300, and keeps $51,700.",
+      cost, 48300, 0, "usd",
       "action_catalog (unit_cost_cents, recurring_cost_cents_per_day, lead_days)",
-      "GUIDE formula: quantity × (unit cost + daily cost × max(0, 30 − lead days)) / 100, summed. The 24 moves are the floor "
-      "optimizer's best plan (assets/moves.js, the Phase 3 location model): about +$137K of theo over July's 28 days.",
+      "GUIDE formula: quantity × (unit cost + daily cost × max(0, 30 − lead days)) / 100, summed. The plan is the best of every "
+      "plan the catalogue allows at central assumptions (assets/benefits.js); the 6 moves are the location model's best (assets/moves.js).",
       "Replacing the bottom 10 instead: the one like-for-like replacement in the data moved theo by +$4 a day (−$17 to +$23). "
       "The one real move in the data matched its projection (+$303 predicted, +$342 a day measured).",
-      "24 is the catalogue's limit on machine moves, and only three action types are allowed; the rest of the budget has "
-      "no action that pays in July.", "actions.html")
+      "Moves leave out bank B-51, whose effect belongs to its new machines. Beyond $48,300 no plan returns more in July.", "actions.html")
+sc = pd.read_csv(ROOT / "outputs/model_change_scorecard.csv")
+promo = sc[sc.change.str.startswith("Property promotion")].set_index("days")
+claim("C21", 6, "The two promotions in the data lifted floor theo by $8.4K a day (Locals Week) and $26.1K a day (Winter Slot Tournament).",
+      promo.loc[3, "theo_usd_per_day"], 26146, 1, "usd",
+      "Model output: outputs/model_change_scorecard.csv (analysis/impact.py, calibrated on 150 planted fake changes)",
+      "Whole-floor theo on promotion days against the floor's expected level, with 90% intervals: tournament "
+      f"${promo.loc[3, 'lo90_usd_day']:,.0f}–${promo.loc[3, 'hi90_usd_day']:,.0f} a day, Locals Week "
+      f"${promo.loc[7, 'lo90_usd_day']:,.0f}–${promo.loc[7, 'hi90_usd_day']:,.0f}.",
+      "That busy weekends lift anyway: the estimator controls for weekday, and its intervals were checked on planted fake changes.",
+      "Two promotions only; the Actions page carries their full range into the plan's pessimistic and optimistic cases.", "actions.html#ben-h")
 b40 = v[(v.zone_id == "Z-B40") & (v.gaming_date >= "2025-05-01")]
 b40_day = b40.theo_usd.sum() / b40.gaming_date.nunique()
 be = cat.loc["A-WAYFINDING", "unit_cost_cents"] / 100 / (b40_day * (30 - cat.loc["A-WAYFINDING", "lead_days"]))

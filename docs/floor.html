@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gilded Ace Floor</title>
+<title>Casino Manager | Floor plan</title>
 <meta name="description" content="Floor plan of The Gilded Ace, shaded by play, expected revenue, luck or traffic, with a move simulator.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Gilded Ace Floor">
+<meta property="og:title" content="Casino Manager | Floor plan">
 <meta property="og:description" content="Floor plan of The Gilded Ace, shaded by play, expected revenue, luck or traffic, with a move simulator.">
 <meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=optional" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <script defer src="assets/core.js"></script>
 <script defer src="assets/floor.js"></script>
@@ -69,6 +69,13 @@
 
     <aside class="card panel" aria-label="Selected machine and move plan">
       <div id="detail"></div>
+      <details class="move-explanation">
+        <summary>How are move estimates calculated?</summary>
+        <div class="small muted">
+          <p>Our location model was fit on Jan–Apr machine-day data. It models coin-in per available hour with a log link, adjusting for game theme, weekday, events, holidays and the Back Forty closure. Each bank coefficient estimates its effect relative to the model's reference bank; converting it with <code>exp(coefficient) − 1</code> gives the estimated percentage difference. These are adjusted associations, not proof that location alone caused the difference.</p>
+          <p>For a move, we compare the destination and original bank effects, apply that difference to the machine's average daily theo over the selected period, then project 28 days in July after a 2-day lead time. A swap counts both machines. The plan subtracts the move-cost setting (default $1,800 per machine) and three hours of estimated lost theo per move. The 90% range reflects uncertainty in the bank coefficients; it does not capture all the uncertainty of a real move. This is projected theo, not guaranteed profit or actual cash revenue. High-Limit and B-51 effects are not attributed to location.</p>
+        </div>
+      </details>
       <hr>
       <div id="plan"></div>
     </aside>
@@ -77,7 +84,8 @@
   <section class="section" aria-labelledby="stop-h">
     <h2 id="stop-h">When to stop moving machines</h2>
     <p>The optimizer adds moves one step at a time, best value per machine first, using the same projection as dragging.
-      A step is a machine into an empty slot or a swap of two. Each extra move is worth making only while it earns back its price over July's 28 days. The catalogue allows at most 24 machine moves.</p>
+      A step is a machine into an empty slot or a swap of two. Each extra move is worth making only while it earns back its price over July's 28 days. The catalogue allows at most 24 machine moves.
+      Bank B-51 is left out: its eight machines went in on Mar 24, so its high effect belongs to them, not the spot.</p>
     <div class="stop-controls">
       <label class="field" for="move-price">Price per move <span class="money">$<input id="move-price" type="number" min="0" step="100" inputmode="numeric"></span></label>
       <button class="btn primary" type="button" id="stop-apply">Put the plan on the floor</button>

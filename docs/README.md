@@ -1,10 +1,10 @@
-# Gilded Ace floor review (dashboard site)
+# Casino Manager
 
 A fully static site: HTML, CSS and JavaScript only. Open `index.html` (the Brief) directly in a browser, or publish the folder as is.
 No server, build step or Python is needed to view it.
 
-The nav is the GUIDE's six questions, one page each (Machines, Demand, Downtime, Players, Comps, Actions), then a Methods menu
-with Evidence and the supporting analysis. The brand links home to the summary page (`index.html`).
+The nav is the GUIDE's six questions, one page each (Machines, Demand, Downtime, Players, Comps, Actions), then Methods
+(Evidence and Models) and Explore (Floor plan, Weekly cycle, Correlations, Context and Player streaks). The brand links home to the summary page (`index.html`).
 
 | Page | Shows |
 | --- | --- |
@@ -14,9 +14,9 @@ with Evidence and the supporting analysis. The brand links home to the summary p
 | `downtime.html` Downtime | Down hours and theo lost by month, hour, shift, maker and zone; the technician replay and the preventive break-even |
 | `players.html` Players | Tracked wagers, payback and net by guest group; loss concentration; each player's expected vs actual payout, payout z against peers, and an exact win-rate test |
 | `comps.html` Comps | Comp cost and reinvestment, the May 1 points-price cut by tier, tier growth, unspent points, and the pilot that would test it |
-| `actions.html` Actions | The $100,000 builder, starting from the floor optimizer's best moves (`assets/moves.js`), with cost, effect, uncertainty, measurement and evidence per action; assumption sliders and a sensitivity table |
+| `actions.html` Actions | Our plan; what every catalogue action can bring (`assets/benefits.js`); the spending-vs-return frontier; a builder with an optimiser. The builder, with cost, effect, uncertainty, measurement and evidence per action; assumption sliders and a sensitivity table |
 | `evidence.html` Evidence | Every headline claim: table and method, result recomputed from raw data, alternative tested, limitation |
-| `floor.html` Floor | Floor plan from `floor_locations` x/y, shaded by play, theo, luck or traffic; drag a machine to project a move |
+| `floor.html` Floor | Floor plan from `floor_locations` x/y, shaded by play, theo, luck or traffic; drag a machine to project a move; tabular machine data is available below the map |
 | `weekly.html` Weekly | The seven-day cycle and the tests behind it |
 | `models.html` Models | How B1 was built, every model vs B1 with bootstrap CIs, iterations, machine and impact-model checks |
 | `correlations.html` Correlations | Correlation matrices with Benjamini–Hochberg q-values |
@@ -29,7 +29,7 @@ The period selector (From/To) is shared across pages and kept in the URL. Moves 
 
 `data/*.js` holds the precomputed results. Each file sets `window.__DATA[name]`, which is why the pages work straight from disk.
 They are generated from the analysis outputs by `scripts/build_site_data.py` (outside this folder), only when the analysis changes.
-`data/weekly.js` and `data/corr.js` come from `scripts/build_site_patterns.py`; `data/downtime.js` from `scripts/build_site_downtime.py`.
+`data/weekly.js` and `data/corr.js` come from `scripts/build_site_patterns.py`; `data/downtime.js` from `scripts/build_site_downtime.py`; `data/benefits.js` from `scripts/build_site_benefits.py`.
 `data/claims.js` comes from `scripts/reproduce_claims.py`, which recomputes every claim from `data/` and checks it against the site (`--check` exits 1 on any mismatch).
 
 ## Publish

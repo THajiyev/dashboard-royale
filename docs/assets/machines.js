@@ -6,9 +6,10 @@
   const S = { a: 0, b: 5, order: "best", q: "", zone: "", all: false, hl: null, onlyFlags: false };
   let F, M, PF, rows, zoneName, bankOf, flags;
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  C.registerPage("machines.html", async () => {
     try { [F, M, PF] = await Promise.all([C.load("floor"), C.load("machines"), C.load("player_flags")]); }
     catch (e) { return C.fail($("#main"), e); }
+    if (!C.pageActive()) return;
     zoneName = Object.fromEntries(F.zones.map((z) => [z.id, z.name]));
     bankOf = Object.fromEntries(F.slots.map((s) => [s.id, s]));
     $("#zone").innerHTML += F.zones.map((z) => `<option value="${z.id}">${C.esc(z.name)}</option>`).join("");
@@ -21,13 +22,13 @@
     $("#more").onclick = () => { S.all = !S.all; drawRank(); };
     $("#fl").onclick = (e) => { const b = e.target.closest("button"); if (b) { S.onlyFlags = b.dataset.f === "1"; drawRank(); } };
     render();
-    addEventListener("themechange", drawCat);
-    addEventListener("resize", drawCat);
+    C.listen(window, "themechange", drawCat);
+    C.listen(window, "resize", drawCat);
     if (S.hl) setTimeout(() => document.getElementById("row-" + S.hl)?.scrollIntoView({ block: "center" }), 50);
   });
 
   function render() {
-    $("#title").textContent = `Luck ranking, ${C.periodLabel(S.a, S.b)}`;
+    $("#title").textContent = `Luck ranking · ${C.periodLabel(S.a, S.b)}`;
     rows = M.map((m) => ({ m, s: C.agg(m, S.a, S.b) })).filter((r) => r.s.n > 0);
     const q = C.bh(rows.map((r) => r.s.p));
     const qh = C.bh(rows.map((r) => C.p2(r.s.hitZ)));
@@ -69,7 +70,7 @@
   // ------------------------------------------------------------- caterpillar
   function drawCat() {
     const svg = $("#cat"); if (!rows) return;
-    const W = svg.clientWidth || 900, H = 300, P = { l: 40, r: 16, t: 12, b: 28 };
+    const W = svg.clientWidth || 900, H = 300, P = { l: 56, r: 16, t: 12, b: 48 };
     const sorted = rows.slice().sort((p, q) => q.s.z - p.s.z);
     const lim = Math.max(4, Math.ceil(Math.max(...sorted.map((r) => Math.abs(r.s.z)))));
     const x = C.scale(0, sorted.length - 1, P.l + 4, W - P.r - 4), y = C.scale(-lim, lim, H - P.b, P.t);
@@ -79,7 +80,9 @@
         <text x="${P.l - 8}" y="${y(v) + 4}" text-anchor="end">${v > 0 ? "+" + v : v < 0 ? "−" + -v : 0}</text>`;
     }
     const sfx = W < 560 ? "" : " for the house";
-    g += `<text x="${P.l}" y="${H - 8}">Luckiest${sfx}</text><text x="${W - P.r}" y="${H - 8}" text-anchor="end">Unluckiest${sfx}</text>`;
+    g += `<text x="${P.l}" y="${H - 24}">Luckiest${sfx}</text><text x="${W - P.r}" y="${H - 24}" text-anchor="end">Unluckiest${sfx}</text>
+      <text x="${(P.l + W - P.r) / 2}" y="${H - 4}" text-anchor="middle" style="fill:var(--ink-2)">Machines, sorted by luck</text>
+      <text transform="translate(14 ${H / 2}) rotate(-90)" text-anchor="middle" style="fill:var(--ink-2)">Luck (standard deviations)</text>`;
     sorted.forEach((r, i) => {
       const lead = r.flag?.level === "flag", watch = r.flag?.level === "watch";
       const fill = lead ? "var(--neg)" : Math.abs(r.s.z) > 1.96 ? "var(--ink-2)" : "var(--ink-3)";
