@@ -1,46 +1,31 @@
-# Dashboard Royale
+# Casino Manager
 
-## Luck, Location, or a Leak?
+**1st place, TAMU Datathon 2026 (Casino Royale).** [Live dashboard](https://thajiyev.github.io/dashboard-royale/) · [Devpost](https://devpost.com/software/casino-manager)
 
-> Management is about to replace the ten machines that earned the least. Your dashboard could stop an expensive mistake—or show that management is right.
->
-> Investigate six months at a fictional 300-machine casino. Explain what changed in demand, payouts, availability, and contribution. Show what tracked players wagered, received back, and actually won or lost. Recommend up to three actions within a $100,000 operations budget for the next 30 days, with evidence, uncertainty, and a way to measure success. Include one useful basic ML or time-series method. You may recommend an experiment, an inspection, or preserving the budget.
+A fictional 300-machine casino's general manager wanted to replace the 10 machines that earned the least over six months. Casino Manager is an interactive dashboard that tests whether those machines were unlucky, badly placed or actually broken, and then plans how to spend a $100,000 budget for July.
 
-Fictional casino; synthetic data calibrated to public aggregates.
+## What we found
 
-> **Draft release:** the data is `0.9.0-draft`. See the [release readiness review](reference/READINESS.md) for outstanding organizer tasks before sharing publicly.
+- **The bottom 10 shouldn't be replaced.** 9 of them are in Back Forty, a zone whose play fell 31% when its walkway closed and recovered when it reopened. The problem is the location, not the machines.
+- **One machine is worth inspecting.** M-1158 held 3.0% against its configured 10%, and it was the only machine whose win rate stood out after correcting for 310 tests (Benjamini–Hochberg). It's a lead to check, not proof of a fault.
+- **Demand** follows the day of the week and events, with a visitor-driven slowdown in June. **Downtime** cost 5,021 hours and about $102K in theo. Tracked players lost a net $15.6M, and the May 1 comp price cut raised comp cost 9% without bringing in more play.
+- **July plan:** two promotion weekends, 6 machine moves and new signs for Back Forty, for $48.3K. The remaining $51.7K is kept.
 
-**New here? Start with the [participant guide](GUIDE.md).** It covers the challenge, setup, the datasets, common mistakes and how to submit.
+Every headline number is recomputed from the raw data by `scripts/reproduce_claims.py` and listed on the dashboard's [Evidence page](https://thajiyev.github.io/dashboard-royale/evidence.html), along with the alternative explanation tested and the limitation for each claim.
 
-🎰 **[View the example dashboard](https://tamu-datathon-org.github.io/dashboard-royale/example-dashboard.html)** (layout only; all values are placeholders)
+## ML and statistics
 
-| | |
-| --- | --- |
-| 📘 [Participant guide](GUIDE.md) | The challenge, setup, datasets, common issues, submission |
-| 📂 [`data/`](data/) | All tables, as `.parquet` and `.csv.gz` |
-| 📑 [Dataset reference](reference/DATASET.md) | Layout, row counts, conventions, money definitions |
-| 📖 [Data dictionary](reference/DATA_DICTIONARY.md) | Every table and column |
-| 🔗 [Sources](reference/SOURCES.md) | Where the real-world files come from |
+- **Machine play model:** a Poisson GLM predicting each machine's coin-in per available hour from bank, theme, weekday, events and the walkway closure. It was trained on Jan–Apr and tested on May–Jun, where it beat zone averages by 28% (MAE $38.2 vs $53.1). Its bank effects decide which machine moves pay off.
+- **Daily demand forecast:** a weekday baseline plus lifts by event type, frozen before the test period. It cut daily error by 36% on May–Jun (MAE $6,699 → $4,290) and gives the July forecast the plan is measured against.
+- **Luck test:** a z-score per machine comparing actual to expected house win and payout frequency, with Benjamini–Hochberg correction.
+- **Causal checks:** difference-in-differences with placebo zones for the walkway closure, and impact estimates with 90% intervals for past promotions, moves and new banks.
 
-Original documentation, scripts and synthetic data use the [MIT license](LICENSE).
-Third-party source tables are excluded; see [publisher terms](reference/SOURCE_TERMS.md).
+## Tech stack
 
-Before publishing, run `python scripts/verify_data.py` and
-`python scripts/check_release.py` (requires Python 3.11+ and DuckDB).
-The release check currently reports missing calibration and publisher evidence.
+- **Analysis:** Python with pandas, NumPy, SciPy, statsmodels, scikit-learn and LightGBM (`analysis/`, `requirements-analysis.txt`).
+- **Dashboard:** a static site of plain HTML, CSS and JavaScript with hand-built SVG charts, no framework or build step (`docs/`). It's hosted on GitHub Pages and also opens straight from disk.
+- **Pipeline:** `python scripts/rebuild_dashboard.py` reruns the analyses, exports the site data to `docs/data/` and checks every claim against its published value.
 
-## Rebuilding the dashboard
+## Credits
 
-After changing source data or analysis code, run `python scripts/rebuild_dashboard.py`.
-It reruns the analyses, exports the static site data, and checks that the evidence claims still
-match their published reference values. If you only need to refresh the site from existing
-`outputs/`, run `python scripts/rebuild_dashboard.py --site-only`.
-
-The site keeps detailed chart datasets in lazily loaded, page-specific files under `docs/data/`
-so opening one page does not download every table. The shared `docs/data/claims.js` registry is
-the source for audited narrative figures; pages can reference a claim with `data-claim="C#"` and
-the shared client fills the current generated value. The Claims and evidence page records each
-claim's source, method, alternative explanation, and limitation.
-
-The rebuild does not rewrite hand-written page text or claim wording. After a data update, have a
-Claude Code agent follow [UPDATE.md](UPDATE.md) to bring that text in line with the new numbers.
+Built for TAMU Datathon 2026. The challenge, the synthetic casino dataset (`data/`, `reference/`) and [GUIDE.md](GUIDE.md) come from the TAMU Datathon organizers and are under the [MIT license](LICENSE). The casino and its people are fictional.
