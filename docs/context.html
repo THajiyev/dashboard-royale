@@ -42,9 +42,10 @@
       </div>
     </div>
     <svg class="chart" id="closure" height="300" role="img" aria-label="Weekly effect of the walkway closure on Back Forty relative to control zones"></svg>
-    <p class="note">Placebo zones, each treated as if closed, moved between −2% and +3%. The whole floor, measured directly, was
-      <span class="mono">+1.6%</span> (90% CI <span class="mono">−0.2%</span> to <span class="mono">+3.4%</span>): players walked to other zones instead of leaving.
-      Access decides where people play more than whether they play. Source: <code>outputs/model_closure_event_study.csv</code>.</p>
+    <p class="note">Placebo zones, each treated as if closed, moved by at most <span data-claim="C4"></span>. The whole-floor estimate, measured directly, was
+      <span class="mono">+<span data-claim="C23"></span></span> (90% CI <span class="mono"><span data-claim="C24"></span></span> to
+      <span class="mono">+<span data-claim="C25"></span></span>). The interval spans zero, so the estimate does not establish a change in total play.
+      Source: <code>outputs/model_change_impacts.csv</code>.</p>
   </section>
 
   <div class="grid-2 section">

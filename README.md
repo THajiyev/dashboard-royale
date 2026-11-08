@@ -28,3 +28,16 @@ Third-party source tables are excluded; see [publisher terms](reference/SOURCE_T
 Before publishing, run `python scripts/verify_data.py` and
 `python scripts/check_release.py` (requires Python 3.11+ and DuckDB).
 The release check currently reports missing calibration and publisher evidence.
+
+## Rebuilding the dashboard
+
+After changing source data or analysis code, run `python scripts/rebuild_dashboard.py`.
+It reruns the analyses, exports the static site data, and checks that the evidence claims still
+match their published reference values. If you only need to refresh the site from existing
+`outputs/`, run `python scripts/rebuild_dashboard.py --site-only`.
+
+The site keeps detailed chart datasets in lazily loaded, page-specific files under `docs/data/`
+so opening one page does not download every table. The shared `docs/data/claims.js` registry is
+the source for audited narrative figures; pages can reference a claim with `data-claim="C#"` and
+the shared client fills the current generated value. The Claims and evidence page records each
+claim's source, method, alternative explanation, and limitation.

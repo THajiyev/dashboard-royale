@@ -7,18 +7,19 @@
   const MAX_TYPES = 3, DRAFT_VERSION = 3, SCN = ["Pessimistic", "Central", "Optimistic"];
   // The assumptions the data can't settle: { lo, mid, hi } = the value in the pessimistic, central, optimistic case.
   // A slider moves the central value; the cases either side stay fixed.
+  const DEFAULTS = C.DEFAULT_ASSUMPTIONS;
   const ASM = {
-    signs: { label: "How much new signs lift Back Forty's play", lo: 0, mid: 0.05, hi: 0.1, max: 0.15, step: 0.005, act: "A-WAYFINDING",
-      why: "The walkway closure shows access matters (play fell 31%), but no one has tested signs.", be: "Signs pay off above" },
-    inspect: { label: "Chance M-1158's inspection finds a fault that can be fixed", lo: 0, mid: 0.5, hi: 1, max: 1, step: 0.05, act: "A-INSPECT",
+    signs: { label: "How much new signs lift Back Forty's play", ...DEFAULTS.signs, max: 0.15, step: 0.005, act: "A-WAYFINDING",
+      why: "The walkway closure shows access affects play, but no one has tested signs.", be: "Signs pay off above" },
+    inspect: { label: "Chance M-1158's inspection finds a fault that can be fixed", ...DEFAULTS.inspect, max: 1, step: 0.05, act: "A-INSPECT",
       why: "M-1158 was flagged after its payout pattern differed from expectation; the cause is unresolved.", be: "Inspection pays off above" },
-    prevent: { label: "How much a maintenance sweep cuts faults", lo: 0.1, mid: 0.4, hi: 0.6, max: 0.8, step: 0.05, act: "A-PREVENTIVE",
+    prevent: { label: "How much a maintenance sweep cuts faults", ...DEFAULTS.prevent, max: 0.8, step: 0.05, act: "A-PREVENTIVE",
       why: "Fault rates are in the data; what a sweep does to them isn't.", be: "A Ridgeline sweep pays off above" },
-    compLoss: { label: "Play lost if comps go back to the old price", lo: 0.01, mid: 0, hi: 0, max: 0.03, step: 0.0025, act: "A-COMP-CHANGE",
+    compLoss: { label: "Play lost if comps go back to the old price", ...DEFAULTS.compLoss, max: 0.03, step: 0.0025, act: "A-COMP-CHANGE",
       why: "The May price cut showed no gain in play, but that can't rule out a small one.", be: "Restoring the old price pays only below" },
   };
   const ASM_OF = { "A-INSPECT": "inspect", "A-PREVENTIVE": "prevent", "A-WAYFINDING": "signs", "A-COMP-PILOT": "compLoss", "A-COMP-CHANGE": "compLoss" };
-  const DEF = Object.fromEntries(Object.entries(ASM).map(([k, s]) => [k, { lo: s.lo, mid: s.mid, hi: s.hi }]));
+  const DEF = DEFAULTS;
   const dec = (s) => (s.step < 0.01 ? 1 : 0);
   const kUsd = (v) => `${v < 0 ? "−" : "+"}$${Math.abs(Math.round(v / 1000))}K`;
   const st = { scn: 1, cap: C.BUDGET };
@@ -270,7 +271,7 @@
     let g = "";
     const k = (v) => (v < 0 ? "−" : "") + "$" + Math.abs(v / 1000) + "K";
     for (let v = lo; v <= hi; v += 25000) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(v)}" y2="${y(v)}" stroke="${v === 0 ? "var(--ink-3)" : "var(--grid)"}"/><text x="${P.l - 8}" y="${y(v) + 4}" text-anchor="end">${k(v)}</text>`;
-    for (let v = 0; v <= C.BUDGET; v += 20000) g += `<text x="${x(v)}" y="${H - 10}" text-anchor="${v === C.BUDGET ? "end" : v ? "middle" : "start"}">${v === C.BUDGET ? "$100K spent" : k(v)}</text>`;
+    for (let v = 0; v <= C.BUDGET; v += 20000) g += `<text x="${x(v)}" y="${H - 10}" text-anchor="${v === C.BUDGET ? "end" : v ? "middle" : "start"}">${v === C.BUDGET ? `${k(C.BUDGET)} spent` : k(v)}</text>`;
     g += `<text x="${P.l + 4}" y="${P.t + 10}">July net</text>`;
     // band: the frontier plans' pessimistic to optimistic net; line: the chosen case, as a step
     const step = (vals) => vals.map((v, i) => `${i ? "L" : "M"}${x(f[i].budget).toFixed(1)},${y(v).toFixed(1)}`).join("");
@@ -341,7 +342,7 @@
     const over = total > C.BUDGET, tooMany = types.length > MAX_TYPES;
     const clash = (qty["A-COMP-PILOT"] && qty["A-COMP-CHANGE"]) ? "The comp pilot and comp change can't be combined" : null;
     $("#stats").innerHTML = [
-      ["Committed", C.usd(total), over ? "Over the $100,000 budget" : `of ${C.usd(C.BUDGET)}; ${C.usd(Math.max(0, C.BUDGET - total))} kept`],
+      ["Committed", C.usd(total), over ? `Over the ${C.usd(C.BUDGET)} budget` : `of ${C.usd(C.BUDGET)}; ${C.usd(Math.max(0, C.BUDGET - total))} kept`],
       ["Action types", `${types.length} of ${MAX_TYPES}`, tooMany ? "Too many: drop one" : clash || "Within the limit"],
       ["July net, central", C.usd(tot[1], { plus: true }), "July 1–30, from Jan–Jun 2025 data"],
       ["Pessimistic – optimistic", `${kUsd(tot[0])} to ${kUsd(tot[2])}`, "Every assumption at its low or high end"],
@@ -357,8 +358,9 @@
 
     $("#catalog").innerHTML = models.map((m) => {
       const n = qty[m.id] || 0, o = m.opts.filter((q) => q <= m.max), mv = m.id === "A-MOVE-MACHINE";
+      const recurringCost = m.recurringCostPerDay ? ` + ${C.usd(m.recurringCostPerDay)}/day` : "";
       return `<div class="act ${n ? "on" : ""}" style="grid-template-columns:1fr auto"><div><div class="name">${C.esc(m.name)}</div>
-        <div class="meta">${C.usd(m.unitCost)}${m.id === "A-REPLACE-LEASE" ? " + $55/day" : ""}, ${m.days} days in July, up to ${m.max}${mv ? `; <a href="floor.html">pick on the floor plan</a>` : ""}</div></div>
+        <div class="meta">${C.usd(m.unitCost)}${recurringCost}, ${m.days} days in July, up to ${m.max}${mv ? `; <a href="floor.html">pick on the floor plan</a>` : ""}</div></div>
         <div class="stepper" role="group" aria-label="${C.esc(m.name)} quantity">
           <button type="button" data-d="-1" data-id="${m.id}" ${n ? "" : "disabled"} aria-label="Fewer">−</button><output>${n}</output>
           <button type="button" data-d="1" data-id="${m.id}" ${n >= o[o.length - 1] ? "disabled" : ""} aria-label="More">+</button></div></div>`;

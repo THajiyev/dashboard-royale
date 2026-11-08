@@ -22,6 +22,33 @@
     s.onerror = () => reject(new Error(`data/${name}.js is missing`));
     document.head.append(s);
   }));
+  C.bindClaimReferences = async () => {
+    const els = C.$$("[data-claim]");
+    if (!els.length) return;
+    let K;
+    try { K = await C.load("claims"); }
+    catch (e) {
+      for (const el of els) {
+        el.textContent = "Claim data unavailable";
+        el.title = "Rebuild the dashboard data with scripts/rebuild_dashboard.py.";
+      }
+      console.error(`Claim references could not load data/claims.js: ${e.message}`);
+      return;
+    }
+    const byId = Object.fromEntries(K.claims.map((claim) => [claim.id, claim]));
+    for (const el of els) {
+      const id = el.dataset.claim, claim = byId[id];
+      if (!claim) {
+        el.textContent = `Missing claim ${id}`;
+        el.title = "This claim reference is not present in data/claims.js.";
+        console.error(`Claim reference ${id} is not present in data/claims.js.`);
+        continue;
+      }
+      el.textContent = claim.shown;
+      el.dataset.claimStatus = claim.pass ? "verified" : "changed";
+      el.title = `${id}: ${claim.pass ? "matches" : "differs from"} the published reference; see Claims and evidence.`;
+    }
+  };
   C.$ = (sel, root = document) => root.querySelector(sel);
   C.$$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   C.esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -141,6 +168,7 @@
     const here = location.pathname.split("/").pop() || "index.html";
     const initialize = pageInitializers.get(here);
     if (initialize) await initialize();
+    await C.bindClaimReferences();
   };
   C.getPeriod = () => {
     const q = new URLSearchParams(location.search);
@@ -233,22 +261,22 @@
   // (Evidence page, recomputed from raw data by scripts/reproduce_claims.py).
   C.QUESTIONS = [
     { n: 1, page: "machines.html", q: "Which machines are truly underperforming once you account for exposure, availability and luck?",
-      a: "Not the bottom 10: they're low because of their spot and games. One machine, M-1158, is flagged for inspection.", claims: ["C1", "C2", "C3", "C4"],
+      a: "<span data-claim=\"C1\"></span> of the bottom 10 sit in Back Forty. M-1158 held <span data-claim=\"C2\"></span> of play against its configured hold, so inspect it before replacing machines.", claims: ["C1", "C2", "C3", "C4"],
       tools: [["floor.html", "Explore the floor plan"], ["correlations.html", "Compare machine patterns"]] },
     { n: 2, page: "forecast.html", q: "What changed in demand across the floor over the six months, and why?",
-      a: "A steady weekly cycle, lifted by events. June fell 6.5% while city visitation was lower; we haven't shown one caused the other.", claims: ["C5", "C6", "C7", "C8", "C9"],
+      a: "The event-type forecast missed by <span data-claim=\"C6\"></span> a day; on ordinary June days the weekday baseline over-forecast by <span data-claim=\"C7\"></span>. City visitation was lower, but we have not shown one caused the other.", claims: ["C5", "C6", "C7", "C8", "C9", "C22"],
       tools: [["weekly.html", "Explore the weekly cycle"], ["context.html", "Check events and access"], ["correlations.html", "Compare daily patterns"]] },
     { n: 3, page: "downtime.html", q: "How much play was lost to downtime, and when?",
-      a: "$90–113K of theo, mostly on the swing shift and on Ridgeline machines.", claims: ["C10", "C11", "C12"],
+      a: "Machines were down <span data-claim=\"C10\"></span> hours. Ridgeline's fault rate was <span data-claim=\"C12\"></span> Halcyon's; repair time, not waiting, is the main staffing constraint.", claims: ["C10", "C11", "C12"],
       tools: [["correlations.html", "Compare downtime with daily floor metrics"]] },
     { n: 4, page: "players.html", q: "What did tracked players wager, get back and net, and how concentrated are those results?",
-      a: "$163.8M wagered, 90.5% paid back, −$15.6M net; the top 10% of losers hold 53% of losses.", claims: ["C13", "C14"],
+      a: "Carded play is <span data-claim=\"C13\"></span> of all coin-in. Losses are concentrated: the top 10% of losing players account for <span data-claim=\"C14\"></span> of losses.", claims: ["C13", "C14"],
       tools: [["streaks.html", "Test whether past results predict the next visit"], ["correlations.html", "Compare player patterns"]] },
     { n: 5, page: "comps.html", q: "What did the loyalty (comp) program cost, and did anything about it change?",
-      a: "$191K in six months. On May 1 comps got half as cheap in points: cost rose 9%, play didn't.", claims: ["C15", "C16", "C17", "C18"],
+      a: "After the May price change, monthly comp cost was <span data-claim=\"C16\"></span>; cost rose <span data-claim=\"C17\"></span>, while established local comp users played <span data-claim=\"C18\"></span>.", claims: ["C15", "C16", "C17", "C18"],
       tools: [["correlations.html", "Compare comps with other daily metrics"]] },
     { n: 6, page: "actions.html", q: "Which actions would you fund with $100,000, and how would you know they worked?",
-      a: "Two promotion weekends, 6 machine moves and Back Forty signs: $48,300, about +$91K net in July (−$7K to +$209K).", claims: ["C19", "C20", "C21"],
+      a: "The current action plan costs <span data-claim=\"C19\"></span>. The Actions page shows projected returns under explicit assumptions and how to measure the results.", claims: ["C19", "C20", "C21"],
       tools: [["floor.html", "Arrange machines and see the live estimate"], ["context.html", "Review measured effects of events and access"]] },
   ];
   const ICON = {

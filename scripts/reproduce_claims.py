@@ -5,8 +5,8 @@
 
 Needs only pandas + pyarrow and the data/ folder. Each claim is computed here from data/ directly, with short,
 readable code, NOT from outputs/ — so anyone can check a number without running the modelling pipeline.
-Three claims depend on a fitted model (the EL forecast, the detectable effect, the GLM fault ratio); those read
-the model's saved output and say so in `source`.
+The EL forecast, detectable effect, and adjusted fault ratio depend on saved model outputs; each says so in
+`source` or `method`.
 
 Every claim carries the fields the GUIDE asks for in the Claims & Evidence appendix:
     table/query -> result -> alternative explanation tested -> limitation
@@ -14,7 +14,9 @@ Every claim carries the fields the GUIDE asks for in the Claims & Evidence appen
 from __future__ import annotations
 
 import json
+import re
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 
 import numpy as np
@@ -48,6 +50,15 @@ on_event = pdays.gaming_date.apply(lambda d: bool(((ev.start_date.astype(str) <=
 pdays["event"] = on_event.to_numpy()
 
 claims: list[dict] = []
+
+
+class ClaimReferenceParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.ids = set()
+
+    def handle_starttag(self, tag, attrs):
+        self.ids.update(value for key, value in attrs if key == "data-claim" and value)
 
 
 def claim(cid, q, text, value, expected, tol, fmt, source, method, alternative, limitation, page, original=False):
@@ -121,6 +132,29 @@ claim("C4", 1, "Placebo check: the same closure test on zones that were not clos
       "prepared_daily_view, as C3",
       "C3's regression with each control zone in turn as the treated zone; the largest absolute effect is reported.",
       "This is the competing-explanation test for C3.", "Five placebo zones is a small reference set.", "context.html#cl-h")
+closure_rows = pd.read_csv(OUT / "model_change_impacts.csv")
+closure_rows = closure_rows[
+    (closure_rows.change == "Walkway W-ENT-B40 closed (Mar 3 – Apr 6)") &
+    (closure_rows.part == "NET, measured directly (whole floor excl. new bank)")
+]
+if len(closure_rows) != 1:
+    raise ValueError("Expected one whole-floor walkway-closure row in outputs/model_change_impacts.csv")
+closure_row = closure_rows.iloc[0]
+closure_source = "Model output: outputs/model_change_impacts.csv (whole-floor closure row)"
+closure_method = ("Direct whole-floor on/off estimate over the closure, with placebo-based 90% interval; "
+                  "see analysis/run_impact.py.")
+closure_alternative = ("Back Forty’s lost play may have shifted to other zones, but this estimate does not establish "
+                       "that players walked elsewhere.")
+closure_limitation = "One 35-day closure; the 90% interval spans zero, so the floor-wide change is inconclusive."
+claim("C23", 1, "The estimated whole-floor change during the walkway closure was +1.6%.",
+      closure_row.effect_pct * 100, 1.6, 0.05, "pct1", closure_source, closure_method,
+      closure_alternative, closure_limitation, "context.html#cl-h")
+claim("C24", 1, "The 90% interval's lower bound for the whole-floor closure estimate was −0.2%.",
+      closure_row.lo90_pct * 100, -0.2, 0.05, "pct1", closure_source, closure_method,
+      closure_alternative, closure_limitation, "context.html#cl-h")
+claim("C25", 1, "The 90% interval's upper bound for the whole-floor closure estimate was +3.4%.",
+      closure_row.hi90_pct * 100, 3.4, 0.05, "pct1", closure_source, closure_method,
+      closure_alternative, closure_limitation, "context.html#cl-h")
 
 # ============================================================================= Q2 demand
 wk = pdays[pdays.gaming_date <= "2025-04-30"].groupby(pdays.gaming_date.dt.dayofweek).theo_usd.mean()
@@ -152,6 +186,11 @@ claim("C7", 2, "On June's ordinary days B1 over-forecast by 6.5%: demand fell, m
       "(analysis/WEATHER_NOTE.md). Las Vegas visitation also ran below 2024 in June (LVCVA).",
       "The locals/visitors split relies on home_region, which covers carded play only.", "forecast.html#seg-h")
 mde = pd.read_csv(OUT / "model_measurement_plan.csv").mde.iloc[0]
+claim("C22", 2, "A floor-wide 30-day test can detect a change of about 4.7%.", mde * 100, 4.7, 0.1, "pct1",
+      "Model output: outputs/model_measurement_plan.csv",
+      "The 80%-power, 5%-significance minimum detectable effect for daily property theo over 30 days.",
+      "The weekday baseline's June drift is larger than this threshold (C8).",
+      "Assumes July's daily residual variability resembles May–Jun.", "forecast.html#meas-h")
 claim("C8", 2, "That 6.5% gap is larger than the 4.7% floor-wide effect a 30-day test can detect, so judging July "
       "against weekday norms would make a no-action month look like a failed plan.", (b1_jun_bias - mde) * 100, 1.9, 0.15, "pp",
       "C7, and model output outputs/model_measurement_plan.csv (detectable effect at 80% power, α = 0.05)",
@@ -312,6 +351,16 @@ def main() -> int:
         print(f"{'PASS' if c['pass'] else 'FAIL'}  {c['id']:<4} Q{c['q']}  {show(c):>10}  (site: {c['expected']:g})  {c['text'][:80]}")
     for c in claims:
         c["shown"] = show(c)
+    parser = ClaimReferenceParser()
+    for path in (ROOT / "docs").rglob("*.html"):
+        parser.feed(path.read_text(encoding="utf-8"))
+    for path in (ROOT / "docs" / "assets").glob("*.js"):
+        parser.ids.update(re.findall(r'data-claim="(C\d+)"', path.read_text(encoding="utf-8")))
+    known = {c["id"] for c in claims}
+    missing = sorted(parser.ids - known)
+    for cid in missing:
+        fails += 1
+        print(f"FAIL  site reference {cid} is missing from the generated claim registry")
     dest = ROOT / "docs/data/claims.js"
     dest.write_text("(window.__DATA = window.__DATA || {})[\"claims\"] = " +
                     json.dumps({"claims": claims, "generated": pd.Timestamp.now().strftime("%Y-%m-%d")},

@@ -121,12 +121,10 @@
         <td class="num">${C.usd(r.cv_mae_janapr)}</td><td class="num">${C.usd(r.MAE)}</td><td class="num">${C.usd(r.bias, { plus: true })}</td>
         <td class="num">${r.skill_vs_B1 == null ? (r.model.startsWith("B1") ? "–" : C.pct(1 - r.MAE / p2.find((x) => x.model.startsWith("B1")).MAE, 0, true)) : C.pct(r.skill_vs_B1, 0, true)}</td>
         <td class="num">${C.pct(r.coverage, 0)}</td></tr>`).join("")}</tbody>`;
+    const machineRows = D.phase2.filter((r) => r.phase === "3 machine");
     $("#mm").innerHTML = `<thead><tr><th>Model</th><th class="num">MAE, $ per hour</th></tr></thead><tbody>
-      <tr><td>Zone average (Z0)</td><td class="num">$53.1</td></tr>
-      <tr><td>Machine's own Jan–Apr average (M0)</td><td class="num">$46.7</td></tr>
-      <tr class="hl"><td>GLM: bank + game + calendar + closure</td><td class="num">$38.2</td></tr>
-      <tr><td>GLM + shrunk machine effect</td><td class="num">$38.2</td></tr>
-      <tr><td>LightGBM: location, game, calendar</td><td class="num">$39.7</td></tr></tbody>`;
+      ${machineRows.map((r) => `<tr class="${r.model === "GLM location+game (no machine effect)" ? "hl" : ""}">
+        <td>${C.esc(r.model)}</td><td class="num">${C.usd(r.MAE, { d: 1 })}</td></tr>`).join("")}</tbody>`;
     $("#iv").innerHTML = `<thead><tr><th>Estimator</th><th class="num">Caught the truth (target 90%)</th><th class="num">False flags (target ≤ 10%)</th><th class="num">Detects −15% / +10%</th></tr></thead><tbody>
       <tr><td>Zone on–off, calibrated</td><td class="num">97%</td><td class="num">3%</td><td class="num">99% / 83%</td></tr>
       <tr><td>Machine diff-in-diff, calibrated</td><td class="num">95%</td><td class="num">5%</td><td class="num">66% / 33%</td></tr>
