@@ -41,3 +41,6 @@ so opening one page does not download every table. The shared `docs/data/claims.
 the source for audited narrative figures; pages can reference a claim with `data-claim="C#"` and
 the shared client fills the current generated value. The Claims and evidence page records each
 claim's source, method, alternative explanation, and limitation.
+
+The rebuild does not rewrite hand-written page text or claim wording. After a data update, have a
+Claude Code agent follow [UPDATE.md](UPDATE.md) to bring that text in line with the new numbers.
