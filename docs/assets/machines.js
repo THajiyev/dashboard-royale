@@ -3,8 +3,8 @@
 (function () {
   "use strict";
   const C = window.Core, $ = C.$;
-  const S = { a: 0, b: 5, order: "best", q: "", zone: "", all: false, hl: null, onlyFlags: false };
-  let F, M, PF, rows, zoneName, bankOf, flags;
+  const S = { a: 0, b: 5, order: "best", q: "", zone: "", bank: "", all: false, hl: null, onlyFlags: false };
+  let F, M, PF, rows, zoneName, bankOf, bankFx, flags;
 
   C.registerPage("machines.html", async () => {
     try { [F, M, PF] = await Promise.all([C.load("floor"), C.load("machines"), C.load("player_flags")]); }
@@ -12,12 +12,15 @@
     if (!C.pageActive()) return;
     zoneName = Object.fromEntries(F.zones.map((z) => [z.id, z.name]));
     bankOf = Object.fromEntries(F.slots.map((s) => [s.id, s]));
+    bankFx = Object.fromEntries(F.banks.map((b) => [b.id, b.fx]));
     $("#zone").innerHTML += F.zones.map((z) => `<option value="${z.id}">${C.esc(z.name)}</option>`).join("");
+    fillBanks();
     S.hl = location.hash.slice(1) || null;
     if (S.hl) { S.order = "worst"; S.all = true; }
     [S.a, S.b] = C.periodControl($("#period"), (a, b) => { S.a = a; S.b = b; render(); });
     $("#q").oninput = (e) => { S.q = e.target.value.trim().toLowerCase(); drawRank(); };
-    $("#zone").onchange = (e) => { S.zone = e.target.value; drawRank(); };
+    $("#zone").onchange = (e) => { S.zone = e.target.value; S.bank = ""; fillBanks(); drawRank(); };
+    $("#bank").onchange = (e) => { S.bank = e.target.value; drawRank(); };
     $("#order").onclick = (e) => { const b = e.target.closest("button"); if (b) { S.order = b.dataset.o; drawRank(); } };
     $("#more").onclick = () => { S.all = !S.all; drawRank(); };
     $("#fl").onclick = (e) => { const b = e.target.closest("button"); if (b) { S.onlyFlags = b.dataset.f === "1"; drawRank(); } };
@@ -36,6 +39,7 @@
     rows.forEach((r, i) => {
       r.q = q[i]; r.qh = qh[i]; r.flag = flags[r.m.id];
       r.zone = bankOf[r.s.loc]?.zone ?? r.m.zone;
+      r.bank = bankOf[r.s.loc]?.bank ?? "";
     });
     drawStats(); drawFlags(); drawCat(); drawB10(); drawRank();
   }
@@ -133,13 +137,34 @@
   }
 
   // ------------------------------------------------------------- ranking
+  // Bank list follows the zone filter, so "Back Forty" then "Bank 47" drills in one step at a time.
+  function fillBanks() {
+    const banks = F.banks.filter((b) => !S.zone || b.zone === S.zone);
+    $("#bank").innerHTML = '<option value="">All banks</option>' + banks.map((b) =>
+      `<option value="${b.id}">Bank ${b.id.slice(2)}${S.zone ? "" : ` · ${C.esc(zoneName[b.zone] ?? "")}`}</option>`).join("");
+    $("#bank").value = S.bank;
+  }
+
+  function drawBankSum(list) {
+    const el = $("#bank-sum");
+    el.hidden = !S.bank;
+    if (!S.bank) return;
+    const t = list.reduce((a, r) => ({ ci: a.ci + r.s.ci, win: a.win + r.s.win, theo: a.theo + r.s.theo }), { ci: 0, win: 0, theo: 0 });
+    const fx = bankFx[S.bank];
+    el.innerHTML = `<strong>Bank ${S.bank.slice(2)}</strong>, ${C.esc(zoneName[F.banks.find((b) => b.id === S.bank)?.zone] ?? "")}:
+      ${list.length} machine${list.length === 1 ? "" : "s"} shown, coin-in ${C.usd(t.ci, { short: true })}, house win ${C.usd(t.win, { short: true })},
+      theo ${C.usd(t.theo, { short: true })}, luck ${C.usd(t.win - t.theo, { plus: true, short: true })}${fx != null ? `, location effect ${C.pct(Math.exp(fx) - 1, 0, true)} (location model)` : ""}.`;
+  }
+
   function drawRank() {
     C.$$("#order button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.o === S.order));
     let list = rows.slice().sort((p, q) => (S.order === "best" ? q.s.z - p.s.z : p.s.z - q.s.z));
     list.forEach((r, i) => { r.rank = i + 1; });
     if (S.zone) list = list.filter((r) => r.zone === S.zone);
-    if (S.q) list = list.filter((r) => (r.m.id + " " + r.m.theme + " " + r.m.mfr).toLowerCase().includes(S.q));
+    if (S.bank) list = list.filter((r) => r.bank === S.bank);
+    if (S.q) list = list.filter((r) => (r.m.id + " " + r.m.theme + " " + r.m.mfr + " " + r.bank + " bank " + r.bank.slice(2)).toLowerCase().includes(S.q));
     if (S.onlyFlags) list = list.filter((r) => r.flag);
+    drawBankSum(list);
     C.$$("#fl button").forEach((b) => b.setAttribute("aria-pressed", (b.dataset.f === "1") === S.onlyFlags));
     const shown = S.all ? list : list.slice(0, 25);
     $("#more").textContent = S.all ? "Show the first 25" : `Show all ${list.length}`;
@@ -149,7 +174,7 @@
       <tbody>${shown.map((r) => `<tr id="row-${r.m.id}" class="${S.hl === r.m.id ? "on" : ""}${r.m.b10 ? " hl" : ""}">
         <td class="num">${r.rank}</td>
         <td><span class="mono">${r.m.id}</span><span class="sub">${C.esc(r.m.theme)}, ${C.esc(r.m.mfr)}</span></td>
-        <td>${C.esc(zoneName[r.zone] ?? "")}</td>
+        <td>${C.esc(zoneName[r.zone] ?? "")}${r.bank ? `<span class="sub">Bank ${r.bank.slice(2)}</span>` : ""}</td>
         <td class="num">${r.s.days}</td><td class="num">${C.usd(r.s.ci, { short: true })}</td>
         <td class="num">${C.usd(r.s.win, { short: true })}</td><td class="num">${C.usd(r.s.theo, { short: true })}</td>
         <td class="num">${C.usd(r.s.luck, { plus: true })}</td><td class="num">${C.num(r.s.z, 2, true)}</td>

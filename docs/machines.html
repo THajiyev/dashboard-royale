@@ -69,8 +69,9 @@
     <p>Hold band: the grey bar is where a fair machine's hold lands 99% of the time, the tick is its configured hold,
       the dot is what it held. A red dot sits outside the band.</p>
     <div class="controls" style="margin-bottom:12px">
-      <label class="field search">Find <input type="search" id="q" placeholder="Machine or game"></label>
+      <label class="field search">Find <input type="search" id="q" placeholder="Machine, game or bank"></label>
       <label class="field">Zone <select id="zone" aria-label="Zone"><option value="">All zones</option></select></label>
+      <label class="field">Bank <select id="bank" aria-label="Bank"><option value="">All banks</option></select></label>
       <div class="seg" role="group" aria-label="Order" id="order">
         <button type="button" data-o="best">Luckiest first</button>
         <button type="button" data-o="worst">Unluckiest first</button>
@@ -80,6 +81,7 @@
         <button type="button" data-f="1">Flagged and watch</button>
       </div>
     </div>
+    <p id="bank-sum" class="small" hidden></p>
     <div class="card table-wrap" style="padding:8px 8px 4px"><table id="rank"></table></div>
     <div style="margin-top:12px"><button class="btn" type="button" id="more">Show all</button></div>
   </section>

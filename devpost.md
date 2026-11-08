@@ -1,5 +1,7 @@
 # Casino Manager
 
+**Dashboard:** https://thajiyev.github.io/dashboard-royale/ · **Code:** https://github.com/THajiyev/dashboard-royale
+
 ## The bottom 10
 
 Casino Manager found that the 10 lowest earners shouldn't be replaced. Most of the performance is explained by the poor location in Back Forty. M-1158 was the only machine flagged for inspection, but it was not confirmed as faulty.
@@ -46,7 +48,7 @@ I also used time-series to forecast theo for the day. My baseline was the averag
 
 ## Claims & Evidence
 
-Every table is in `data/`, and scripts and model outputs are in the repository. The dashboard's Evidence page recomputes the headline claims from raw data (`python scripts/reproduce_claims.py`).
+Every table is in `data/`, and scripts and model outputs are in the repository. The dashboard's [Evidence page](https://thajiyev.github.io/dashboard-royale/evidence.html) recomputes the headline claims from raw data (`python scripts/reproduce_claims.py`).
 
 | # | Claim | Table / query | Result | Alternative explanation | Limitation |
 |---|---|---|---|---|---|
