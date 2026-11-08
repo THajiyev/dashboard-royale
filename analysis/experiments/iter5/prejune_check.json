@@ -1,0 +1,11 @@
+{
+  "janfeb_pick": "seg top_down beta=1.0",
+  "marapr_rmse_pick": 5046.512570371562,
+  "marapr_rmse_el2a": 4824.607145237845,
+  "delta_pct": 0.04599450658956772,
+  "ci95": [
+    -0.03621204790081244,
+    0.1392224985497534
+  ],
+  "janapr_pick": "seg bottom_up beta=0.5"
+}

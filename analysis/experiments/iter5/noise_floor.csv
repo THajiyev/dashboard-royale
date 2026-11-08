@@ -1,0 +1,4 @@
+fit,ordinary_RMSE_janjun,ordinary_RMSE_mayjun
+EL in-sample (Jan-Jun fit),4428.1793800497935,4649.425020496278
+"local level, centred 28d (hindsight)",3918.1721533575897,3673.9909191046695
+"local level, centred 14d (hindsight)",3659.254384248954,3371.655268427993
