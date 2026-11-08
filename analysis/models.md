@@ -239,3 +239,11 @@ This model scores any change for direct effect, spillover and **net theo $/day**
 | Move M-1152, Back Forty → Entrance | +101% coin-in; **net +$342/day** after bank-mate spillover. Pays back a $1,800 move in about a week. |
 | 8 new Pit machines | Net +$5.3K/day; cannibalization −0.3% (−2.5% to +1.9%) |
 | Outages | Bank-mates recapture −2% (−15% to +12%) of a down machine's play, so outage play is lost |
+
+## Iteration 4 — holiday proximity and prior-year patterns (no change to the recommendation)
+
+Full write-up: `analysis/experiments/iter4/README.md`.
+
+- **Holiday features** (holiday day, long weekend, within 1–3 days, exp(−|d|/τ) closeness, before/on/after bins, GBM): fitted effects are all within ±1.4%, and holdout MAE moves by at most ±1.2%, none significant. On the holdout's holiday windows the base already errs less than on an average day.
+- **Prior-year patterns** from LVCVA 2023–24 monthly visitors (`iter4/lvcva_history.csv`): the seasonal shape won fixed-protocol CV (+3%) but lost the holdout by 12%. 2023–24 had no June dip, and 2025's decline is a year-specific slowdown. Carrying the latest *published* YoY change forward helps slightly (+1.0% theo, +1.5% coin-in, DM p = 0.23).
+- **EL2 + 28-day anchor, refreshed weekly** stays the recommended forecast.
