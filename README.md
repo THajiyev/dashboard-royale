@@ -1,6 +1,6 @@
 # Casino Manager
 
-**1st place, TAMU Datathon 2026 (Casino Royale).** [Live dashboard](https://thajiyev.github.io/dashboard-royale/) · [Devpost](https://devpost.com/software/casino-manager)
+**1st place, TAMU Datathon 2026 (Casino Royale).** [Live dashboard](https://thajiyev.github.io/dashboard-royale/) · [Write-up](WRITEUP.md) · [Devpost](https://devpost.com/software/casino-manager)
 
 A fictional 300-machine casino's general manager wanted to replace the 10 machines that earned the least over six months. Casino Manager is an interactive dashboard that tests whether those machines were unlucky, badly placed or actually broken, and then plans how to spend a $100,000 budget for July.
 
@@ -11,7 +11,7 @@ A fictional 300-machine casino's general manager wanted to replace the 10 machin
 - **Demand** follows the day of the week and events, with a visitor-driven slowdown in June. **Downtime** cost 5,021 hours and about $102K in theo. Tracked players lost a net $15.6M, and the May 1 comp price cut raised comp cost 9% without bringing in more play.
 - **July plan:** two promotion weekends, 6 machine moves and new signs for Back Forty, for $48.3K. The remaining $51.7K is kept.
 
-Every headline number is recomputed from the raw data by `scripts/reproduce_claims.py` and listed on the dashboard's [Evidence page](https://thajiyev.github.io/dashboard-royale/evidence.html), along with the alternative explanation tested and the limitation for each claim.
+Every headline number is recomputed from the raw data by `scripts/reproduce_claims.py` and listed on the dashboard's [Evidence page](https://thajiyev.github.io/dashboard-royale/evidence.html), along with the alternative explanation tested and the limitation for each claim. The full submission, including the July plan, the AI statement and the Claims & Evidence table, is in [WRITEUP.md](WRITEUP.md).
 
 ## ML and statistics
 
